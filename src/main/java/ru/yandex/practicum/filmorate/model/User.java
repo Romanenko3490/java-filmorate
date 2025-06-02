@@ -7,11 +7,10 @@ import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
-public class Film {
+public class User {
     private Integer id;
+    private String email;
+    private String login;
     private String name;
-    private String description;
-    private LocalDate releaseDate;
-    private Integer duration;
-
+    private LocalDate birthday;
 }

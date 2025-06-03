@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -14,6 +16,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/users")
 @Slf4j
+@Validated
 public class UserController {
 
     Map<Integer, User> users = new HashMap<>();
@@ -24,7 +27,7 @@ public class UserController {
     }
 
     @PostMapping
-    public User addUser(@RequestBody User newUser) {
+    public User addUser(@Valid @RequestBody User newUser) {
         if (newUser == null) {
             log.error("User is null");
             throw new ValidationException("User is null");
@@ -43,7 +46,7 @@ public class UserController {
     }
 
     @PutMapping
-    public User updateUser(@RequestBody User newUser) {
+    public User updateUser(@Valid @RequestBody User newUser) {
         if (newUser == null) {
             log.error("Updated user is null");
             throw new ValidationException("Updated user is null");

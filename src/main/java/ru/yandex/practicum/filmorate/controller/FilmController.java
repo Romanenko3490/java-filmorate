@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -13,6 +15,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
+@Validated
 @RequestMapping("/films")
 public class FilmController {
 
@@ -24,7 +27,7 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film addFilm(@RequestBody Film newFilm) {
+    public Film addFilm(@Valid @RequestBody Film newFilm) {
         if (newFilm == null) {
             log.error("Attempt to add null film");
             throw new ValidationException("Film is null");
@@ -44,7 +47,7 @@ public class FilmController {
 
 
     @PutMapping
-    public Film updateFilm(@RequestBody Film newFilm) {
+    public Film updateFilm(@Valid @RequestBody Film newFilm) {
         if (newFilm == null) {
             log.error("Film is null");
             throw new ValidationException("Film is null");

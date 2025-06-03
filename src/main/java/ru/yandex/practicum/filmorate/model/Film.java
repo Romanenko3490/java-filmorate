@@ -14,8 +14,7 @@ import java.time.LocalDate;
 public class Film {
     private Integer id;
 
-    @NotNull(message = "Film name cannot be empty")
-    @NotBlank(message = "Film name cannot be blank")
+    @NotBlank(message = "Film name cannot be blank or empty")
     private String name;
 
     @Size(max = 200, message = "Film description cannot be longer than 200 characters")

@@ -19,11 +19,21 @@ import java.util.Map;
 @Validated
 public class UserController {
 
-    Map<Integer, User> users = new HashMap<>();
+    private Map<Integer, User> users = new HashMap<>();
 
     @GetMapping
     public Collection<User> getUsers() {
         return users.values();
+    }
+
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable int id) {
+        log.info("Get user with id {}", id);
+        if (!users.containsKey(id)) {
+            log.error("User with id {} not found", id);
+            throw new NotFoundException("User with id " + id + " not found");
+        }
+        return users.get(id);
     }
 
     @PostMapping

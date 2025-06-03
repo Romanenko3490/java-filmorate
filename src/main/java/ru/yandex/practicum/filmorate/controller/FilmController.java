@@ -19,11 +19,21 @@ import java.util.Map;
 @RequestMapping("/films")
 public class FilmController {
 
-    private final Map<Integer, Film> films = new HashMap<>();
+    private Map<Integer, Film> films = new HashMap<>();
 
     @GetMapping
     public Collection<Film> getFilms() {
         return films.values();
+    }
+
+    @GetMapping("/{id}")
+    public Film getFilmById(@PathVariable int id) {
+        log.info("Get film by id: {}", id);
+        if (!films.containsKey(id)) {
+            log.error("Film not found by id: {}", id);
+            throw new NotFoundException("Film not found by id: " + id);
+        }
+        return films.get(id);
     }
 
     @PostMapping

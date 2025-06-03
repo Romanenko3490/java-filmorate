@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.exception.errorhandling;
 
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 
 // Resource https://struchkov.dev/blog/ru/spring-boot-validation/
 // Не нашел информации, как проверить валидацию полей через анотации в тестах j-unit
+@Slf4j
 @ControllerAdvice
 public class ErrorHandlingControllerAdvice {
 
@@ -27,6 +29,7 @@ public class ErrorHandlingControllerAdvice {
                         violation.getMessage()
                 ))
                 .collect(Collectors.toList());
+        log.error("Constraint Violations Found ({}) : {}", violations.size(), violations);
         return new ValidationErrorResponse(violations);
     }
 
@@ -40,6 +43,7 @@ public class ErrorHandlingControllerAdvice {
                         violation.getDefaultMessage()
                 ))
                 .collect(Collectors.toList());
+        log.error("Validation  Failed for {} field : {}", violations.size(), violations);
         return new ValidationErrorResponse(violations);
     }
 }

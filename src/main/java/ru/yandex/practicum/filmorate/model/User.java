@@ -15,8 +15,7 @@ public class User {
     private Integer id;
 
     @Email(message = "Invalid e-mail format")
-    @NotNull(message = "Email can not be empty")
-    @NotBlank(message = "Email can not be blank")
+    @NotBlank(message = "Email can not be blank or empty")
     private String email;
 
     @NotNull(message = "Login can not be empty")

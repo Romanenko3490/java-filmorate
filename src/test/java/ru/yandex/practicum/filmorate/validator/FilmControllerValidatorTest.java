@@ -55,7 +55,7 @@ class FilmControllerValidatorTest {
         Film addFilm = new Film(
                 null,
                 "name",
-                String.valueOf('a').repeat(201),
+                String.valueOf('b').repeat(201),
                 LocalDate.of(2000, 10, 1),
                 125
         );

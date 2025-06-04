@@ -55,10 +55,8 @@ class FilmControllerValidatorTest {
         Film addFilm = new Film(
                 null,
                 "name",
-                "Here should be very long descriptio with 201 characters " +
-                        " asdadadadadadadadadsadwawdasdawdasdasdasdasdasdaasdakxcxvfvsasdasdasd " +
-                        "asdasdasdasdasdasdasdasdadasdasdasdasdasdadlkijikjilhgtyujhgvbnj,mnhygbnjk",
-                LocalDate.of(200, 10, 1),
+                String.valueOf('a').repeat(201),
+                LocalDate.of(2000, 10, 1),
                 125
         );
 

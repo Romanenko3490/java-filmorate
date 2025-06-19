@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -42,7 +41,7 @@ public class FilmService {
         return filmStorage.getFilmById(id);
     }
 
-    public Film update(@NotBlank Film newFilm) {
+    public Film update(@Valid Film newFilm) {
         if (newFilm == null) {
             log.error("Film is null");
             throw new ValidationException("Film is null");
@@ -70,8 +69,7 @@ public class FilmService {
         }
     }
 
-    public void addLike(@NotBlank @Positive Integer filmId,
-                        @NotBlank @Positive Integer userId) {
+    public void addLike(Integer filmId, Integer userId) {
 
         isPresentInStorage(filmId, userId);
 
@@ -80,8 +78,7 @@ public class FilmService {
         log.info("Пользователь id " + userId + " лайкнул фильм id " + filmId);
     }
 
-    public void removeLike(@NotBlank @Positive Integer filmId,
-                           @NotBlank @Positive Integer userId) {
+    public void removeLike(Integer filmId, Integer userId) {
 
         isPresentInStorage(filmId, userId);
 

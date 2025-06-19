@@ -13,9 +13,6 @@ import java.util.Collection;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-//Всю логику валидации поместил на сервисный слой, поэтому большинство тестов стало для класса не актуально
-
-
 @SpringBootTest
 public class InMemoryFilmStorageTest {
     private final InMemoryFilmStorage inMemoryFilmStorage;
@@ -53,70 +50,6 @@ public class InMemoryFilmStorageTest {
         assertEquals("Film is null", exception.getMessage());
     }
 
-//    @Test
-//    void addFilmWithTooLongDescription() {
-//        Film addFilm = new Film(
-//                null,
-//                "name",
-//                String.valueOf('b').repeat(201),
-//                LocalDate.of(2000, 10, 1),
-//                125
-//        );
-//
-//        ValidationException exception = assertThrows(ValidationException.class, () -> inMemoryFilmStorage.addFilm(addFilm));
-//        assertEquals("Film description cannot be longer than 200 characters", exception.getMessage());
-//    }
-
-//    @Test
-//    void theFilmShellHaveTheName() {
-//        Film addFilm = new Film(
-//                null,
-//                null,
-//                "Valid Film Description",
-//                LocalDate.of(2000, 10, 1),
-//                125
-//        );
-//
-//        ValidationException exception = assertThrows(ValidationException.class, () -> inMemoryFilmStorage.addFilm(addFilm));
-//        assertEquals("Film name cannot be empty", exception.getMessage());
-//    }
-
-//    @Test
-//    void theTheFilmReleaseDateShellNotBeBeforeExistingDate() {
-//        Film addFilm = new Film(
-//                null,
-//                "Valid name",
-//                "Valid Film Description",
-//                LocalDate.of(1800, 10, 1),
-//                125
-//        );
-//        ValidationException exception = assertThrows(ValidationException.class, () -> inMemoryFilmStorage.addFilm(addFilm));
-//        assertEquals("Film release date cannot be before existing(28.12.1895)", exception.getMessage());
-//    }
-//
-//    @Test
-//    void theFilmShellHavePositiveAndNotZeroDuration() {
-//        Film addFilm1 = new Film(
-//                null,
-//                "Valid name",
-//                "Valid Film Description",
-//                LocalDate.of(2000, 10, 1),
-//                -1
-//        );
-//
-//        Film addFilm2 = new Film(
-//                null,
-//                "Valid name 2",
-//                "Valid Film Description 2",
-//                LocalDate.of(2000, 10, 2),
-//                0
-//        );
-//        ValidationException exception1 = assertThrows(ValidationException.class, () -> inMemoryFilmStorage.addFilm(addFilm1));
-//        assertEquals("Film duration cannot be negative or zero", exception1.getMessage());
-//
-//        ValidationException exception2 = assertThrows(ValidationException.class, () -> inMemoryFilmStorage.addFilm(addFilm2));
-//        assertEquals("Film duration cannot be negative or zero", exception2.getMessage());
-//    }
 
     @Test
     void updateFilmSuccessfully() {
@@ -139,38 +72,6 @@ public class InMemoryFilmStorageTest {
         assertEquals(150, resultFilm.getDuration());
     }
 
-
-//    @Test
-//    void updateFilmWithInvalidId() {
-//        Film invalidFilm = new Film(
-//                999,
-//                "name",
-//                "description",
-//                LocalDate.of(2000, 10, 1),
-//                125
-//        );
-//        NotFoundException exception = assertThrows(NotFoundException.class, () -> inMemoryFilmStorage.updateFilm(invalidFilm));
-//        assertEquals("Film with id " + invalidFilm.getId() + " not found", exception.getMessage());
-//    }
-//
-//    @Test
-//    void updateFilmWithNullId() {
-//        Film invalidFilm = new Film(
-//                null,
-//                "name",
-//                "description",
-//                LocalDate.of(2000, 10, 1),
-//                125
-//        );
-//        ValidationException exception = assertThrows(ValidationException.class, () -> inMemoryFilmStorage.updateFilm(invalidFilm));
-//        assertEquals("Film id is null", exception.getMessage());
-//    }
-//
-//    @Test
-//    void updateFilmWithNullFilm() {
-//        ValidationException exception = assertThrows(ValidationException.class, () -> inMemoryFilmStorage.updateFilm(null));
-//        assertEquals("Film is null", exception.getMessage());
-//    }
 
     @Test
     void getAllFilms() {

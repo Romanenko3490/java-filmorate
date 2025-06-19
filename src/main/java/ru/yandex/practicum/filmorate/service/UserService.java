@@ -2,8 +2,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,7 +29,7 @@ public class UserService {
         return userStorage.getUsers();
     }
 
-    public User addUser(User newUser) {
+    public User addUser(@Valid User newUser) {
         if (newUser == null) {
             log.error("User is null");
             throw new ValidationException("User is null");
@@ -44,11 +43,11 @@ public class UserService {
         }
     }
 
-    public User getUser(@NotBlank Integer id) {
+    public User getUser(Integer id) {
         return userStorage.getUser(id);
     }
 
-    public User updateUser(User newUser) {
+    public User updateUser(@Valid User newUser) {
         if (newUser == null) {
             log.error("Updated user is null");
             throw new ValidationException("Updated user is null");
@@ -66,8 +65,7 @@ public class UserService {
 
     }
 
-    public void addFriend(@NotBlank @Positive Integer userId,
-                          @NotBlank @Positive Integer friendId) {
+    public void addFriend(Integer userId, Integer friendId) {
 
         isPresentInStorage(userId, friendId);
 
@@ -77,8 +75,7 @@ public class UserService {
         log.info("Пользователи {} и {} теперь друзья", userId, friendId);
     }
 
-    public void removeFriend(@NotBlank @Positive Integer userId,
-                             @NotBlank @Positive Integer friendId) {
+    public void removeFriend(Integer userId, Integer friendId) {
 
         isPresentInStorage(userId, friendId);
 
@@ -88,7 +85,7 @@ public class UserService {
         log.info("Пользователи {} и {} теперь не друзья", userId, friendId);
     }
 
-    public Collection<User> getFriends(@NotBlank @Positive Integer userId) {
+    public Collection<User> getFriends(Integer userId) {
 
         isPresentInStorage(userId);
 
@@ -98,8 +95,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public List<User> getCommonFriends(@NotBlank @Positive Integer userId,
-                                       @NotBlank @Positive Integer otherUserId) {
+    public List<User> getCommonFriends(Integer userId, Integer otherUserId) {
 
         isPresentInStorage(userId, otherUserId);
 
@@ -113,14 +109,13 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    private void isPresentInStorage(@NotBlank @Positive Integer userId) {
+    private void isPresentInStorage(Integer userId) {
         if (!userStorage.getUsersMap().containsKey(userId)) {
             throw new NotFoundException("Пользователь с id " + userId + "не найден");
         }
     }
 
-    private void isPresentInStorage(@NotBlank @Positive Integer userId,
-                                    @NotBlank @Positive Integer otherUserId) {
+    private void isPresentInStorage(Integer userId, Integer otherUserId) {
         if (!userStorage.getUsersMap().containsKey(userId)) {
             throw new NotFoundException("Пользователь с id " + userId + "не найден");
         }

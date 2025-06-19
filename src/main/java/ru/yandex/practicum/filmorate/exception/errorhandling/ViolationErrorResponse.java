@@ -6,9 +6,9 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
-// Resource https://struchkov.dev/blog/ru/spring-boot-validation/
+
 @Getter
 @RequiredArgsConstructor
-public class ValidationErrorResponse {
+public class ViolationErrorResponse {
     private final List<Violation> violations;
 }

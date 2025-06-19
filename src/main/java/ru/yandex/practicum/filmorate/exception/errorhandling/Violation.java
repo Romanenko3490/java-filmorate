@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 
-// Resource https://struchkov.dev/blog/ru/spring-boot-validation/
 @Getter
 @RequiredArgsConstructor
 public class Violation {

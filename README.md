@@ -66,11 +66,17 @@ e
 |----------|----------|--------------------------|------------------|
 | film_id  | INTEGER  | PRIMARY KEY, FOREIGN KEY | ID фильма        |
 | user_id  | INTEGER  | PRIMARY KEY, FOREIGN KEY | ID пользователя  |
-
 ## Схема связей (Mermaid)
 
 ```mermaid
 erDiagram
+    USER ||--o{ FRIENDSHIP : "имеет"
+    USER ||--o{ FILM_LIKE : "ставит"
+    FILM ||--o{ FILM_GENRE : "имеет"
+    FILM ||--o{ FILM_LIKE : "получает"
+    FILM }|--|| MPA_RATING : "рейтинг"
+    FILM_GENRE }|--|| GENRE : "жанр"
+
     USER {
         integer id
         varchar email
@@ -99,13 +105,22 @@ erDiagram
         varchar description
     }
     
-    USER ||--o{ FRIENDSHIP : "имеет"
-    USER ||--o{ FILM_LIKE : "ставит"
-    FILM ||--o{ FILM_GENRE : "имеет"
-    FILM ||--o{ FILM_LIKE : "получает"
-    FILM }|--|| MPA_RATING : "рейтинг"
-    FILM_GENRE }|--|| GENRE : "жанр"
-
+    FRIENDSHIP {
+        integer user_id
+        integer friend_id
+        varchar status
+        date created_date
+    }
+    
+    FILM_GENRE {
+        integer film_id
+        integer genre_id
+    }
+    
+    FILM_LIKE {
+        integer film_id
+        integer user_id
+    }
 
 
 Примеры заапросов:

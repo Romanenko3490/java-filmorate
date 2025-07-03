@@ -72,7 +72,7 @@
 ```mermaid
 erDiagram
     users ||--o{ friendship : "имеет"
-    users ||--o{ film_like : "ставит"
+    users ||--o{ film_likes : "ставит"
     films ||--o{ film_genre : "имеет"
     films ||--o{ film_likes : "получает"
     films }|--|| mpa_rating : "рейтинг"

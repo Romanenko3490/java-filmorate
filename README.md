@@ -120,7 +120,7 @@ erDiagram
     
     film_likes {
         int film_id PK,FK
-        int user_id PK,FK
+        int user_id FK
     }
 
 

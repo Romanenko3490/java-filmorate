@@ -72,23 +72,23 @@ e
 
 ```mermaid
 erDiagram
-    USER ||--o{ FRIENDSHIP : "имеет"
-    USER ||--o{ FILM_LIKE : "ставит"
-    FILM ||--o{ FILM_GENRE : "имеет"
-    FILM ||--o{ FILM_LIKE : "получает"
-    FILM }|--|| MPA_RATING : "рейтинг"
-    FILM_GENRE }|--|| GENRE : "жанр"
+    users ||--o{ friendship : "имеет"
+    users ||--o{ film_like : "ставит"
+    films ||--o{ film_genre : "имеет"
+    films ||--o{ film_likes : "получает"
+    films }|--|| mpa_rating : "рейтинг"
+    film_genre }|--|| genre : "жанр"
 
-    USER {
-        int id PK
+    users {
+        int user_id PK
         string email
         string login
         string name
         date birthday
     }
     
-    FILM {
-        int id PK
+    films {
+        int film_id PK
         string name
         string description
         date release_date
@@ -96,30 +96,30 @@ erDiagram
         int mpa_rating_id FK
     }
     
-    GENRE {
-        int id PK
+    genre {
+        int genre_id PK
         string name
     }
     
-    MPA_RATING {
-        int id PK
+    mpa_rating {
+        int mpa_id PK
         string code
         string description
     }
     
-    FRIENDSHIP {
+    friendship {
         int user_id PK,FK
         int friend_id PK,FK
         string status
         date created_date
     }
     
-    FILM_GENRE {
+    film_genre {
         int film_id PK,FK
         int genre_id PK,FK
     }
     
-    FILM_LIKE {
+    film_likes {
         int film_id PK,FK
         int user_id PK,FK
     }

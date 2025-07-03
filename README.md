@@ -61,7 +61,6 @@
 | genre_id | INTEGER  | PRIMARY KEY, FOREIGN KEY | ID жанра         |
 
 #### 7. Лайки фильмов (`film_likes`)
-e
 | Поле     | Тип      | Ограничения              | Описание         |
 |----------|----------|--------------------------|------------------|
 | film_id  | INTEGER  | PRIMARY KEY, FOREIGN KEY | ID фильма        |

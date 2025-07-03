@@ -66,7 +66,9 @@ e
 |----------|----------|--------------------------|------------------|
 | film_id  | INTEGER  | PRIMARY KEY, FOREIGN KEY | ID фильма        |
 | user_id  | INTEGER  | PRIMARY KEY, FOREIGN KEY | ID пользователя  |
-## Схема связей (Mermaid)
+
+
+## ER-диаграмма базы данных Filmorate
 
 ```mermaid
 erDiagram
@@ -78,66 +80,48 @@ erDiagram
     FILM_GENRE }|--|| GENRE : "жанр"
 
     USER {
-        integer id
-        varchar email
-        varchar login
-        varchar name
+        int id PK
+        string email
+        string login
+        string name
         date birthday
     }
     
     FILM {
-        integer id
-        varchar name
-        varchar description
+        int id PK
+        string name
+        string description
         date release_date
-        integer duration
-        integer mpa_rating_id
+        int duration
+        int mpa_rating_id FK
     }
     
     GENRE {
-        integer id
-        varchar name
+        int id PK
+        string name
     }
     
     MPA_RATING {
-        integer id
-        varchar code
-        varchar description
+        int id PK
+        string code
+        string description
     }
     
     FRIENDSHIP {
-        integer user_id
-        integer friend_id
-        varchar status
+        int user_id PK,FK
+        int friend_id PK,FK
+        string status
         date created_date
     }
     
     FILM_GENRE {
-        integer film_id
-        integer genre_id
+        int film_id PK,FK
+        int genre_id PK,FK
     }
     
     FILM_LIKE {
-        integer film_id
-        integer user_id
+        int film_id PK,FK
+        int user_id PK,FK
     }
 
 
-Примеры заапросов:
-
-Получение списка друзей:
-SELECT u.id, u.name, f.status
-FROM users u
-JOIN friendships f ON u.id = f.friend_id
-WHERE f.user_id = 1;
-
-
-Получение всех жанров:
-SELECT * FROM genres;
-
-Поиск фильмов по жанру:
-
-SELECT f.title 
-FROM films f
-JOIN film_genres fg ON f.id = fg.film_id
-WHERE fg.genre_id = 3; (мультфильм)

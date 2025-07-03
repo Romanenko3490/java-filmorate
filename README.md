@@ -71,14 +71,40 @@ e
 
 ```mermaid
 erDiagram
+    USER {
+        integer id
+        varchar email
+        varchar login
+        varchar name
+        date birthday
+    }
+    
+    FILM {
+        integer id
+        varchar name
+        varchar description
+        date release_date
+        integer duration
+        integer mpa_rating_id
+    }
+    
+    GENRE {
+        integer id
+        varchar name
+    }
+    
+    MPA_RATING {
+        integer id
+        varchar code
+        varchar description
+    }
+    
     USER ||--o{ FRIENDSHIP : "имеет"
     USER ||--o{ FILM_LIKE : "ставит"
     FILM ||--o{ FILM_GENRE : "имеет"
     FILM ||--o{ FILM_LIKE : "получает"
     FILM }|--|| MPA_RATING : "рейтинг"
     FILM_GENRE }|--|| GENRE : "жанр"
-
-
 
 
 

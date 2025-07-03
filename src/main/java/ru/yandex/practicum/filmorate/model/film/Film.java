@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.model.film;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -24,6 +24,9 @@ public class Film {
     @NotNull(message = "Please complete field \"duration\"")
     @Positive(message = "Film duration cannot be negative or zero")
     private Integer duration;
+
+    private Set<Genre> genres = new HashSet<>();
+    private MpaRating mpa;
 
     private Set<Integer> likes = new HashSet<>();
 

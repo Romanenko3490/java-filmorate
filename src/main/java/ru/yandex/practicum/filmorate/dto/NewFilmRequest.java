@@ -1,16 +1,15 @@
-package ru.yandex.practicum.filmorate.model.film;
+package ru.yandex.practicum.filmorate.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.model.film.Genre;
+import ru.yandex.practicum.filmorate.model.film.MpaRating;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Set;
 
 @Data
-public class Film {
-    private Long id;
-
+public class NewFilmRequest {
     @NotBlank(message = "Film name cannot be blank or empty")
     private String name;
 
@@ -24,28 +23,12 @@ public class Film {
     @Positive(message = "Film duration cannot be negative or zero")
     private Integer duration;
 
-    private Set<Genre> genres = new HashSet<>();
+    private Set<Genre> genres;
+
     private MpaRating mpa;
-
-    private Set<Long> likes = new HashSet<>();
-
-    public Film(Long id, String name, String description, LocalDate releaseDate, Integer duration) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.releaseDate = releaseDate;
-        this.duration = duration;
-    }
-
-    public Film() {}
 
     @AssertTrue(message = "Release date must be on or after 1895-12-28")
     public boolean hasReleaseDate() {
         return !(releaseDate == null || releaseDate.isBefore(LocalDate.of(1895, 12, 28)));
     }
-
-    public Integer getLikesCount() {
-        return likes.size();
-    }
-
 }

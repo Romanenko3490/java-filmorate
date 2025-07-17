@@ -1,11 +1,14 @@
 package ru.yandex.practicum.filmorate.model.film;
 
 
+import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
+@Data
 public class MpaRating {
     private int id;
     private String code;
@@ -17,6 +20,8 @@ public class MpaRating {
         this.code = code;
         this.description = rating.getDescription();
     }
+
+    public MpaRating() {}
 }
 
 //Предполагается, что этот енум будет лежать в бд и потом из бд подгружаться  в будущем

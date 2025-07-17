@@ -8,26 +8,30 @@ import ru.yandex.practicum.filmorate.model.user.User;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
-//Всю логику валидации поместил на сервисный слой, поэтому большинство тестов стало для класса не актуально
 
 @Slf4j
 @Component
 public class InMemoryUserStorage implements UserStorage {
 
-    private Map<Integer, User> users = new HashMap<>();
+    private Map<Long, User> users = new HashMap<>();
 
     public Collection<User> getUsers() {
         return users.values();
     }
 
-    public User getUser(int id) {
+    public Optional<User> getUser(long id) {
         log.info("Get user with id {}", id);
-        if (!users.containsKey(id)) {
-            log.error("User with id {} not found", id);
-            throw new NotFoundException("User with id " + id + " not found");
-        }
-        return users.get(id);
+        return Optional.ofNullable(users.get(id))
+                .map(user -> {
+                    log.info("Get user with id {}", id);
+                    return user;
+                })
+                .or(() -> {
+                    log.info("No user with id {}", id);
+                    throw new NotFoundException("No user with id " + id);
+                });
     }
 
     public User addUser(User newUser) {
@@ -53,17 +57,17 @@ public class InMemoryUserStorage implements UserStorage {
         return oldUser;
     }
 
-    private int getNextUserId() {
-        int maxId = users.values().stream()
-                .mapToInt(User::getId)
+    private long getNextUserId() {
+        long maxId = users.values().stream()
+                .mapToLong(User::getId)
                 .max()
                 .orElse(0);
         return ++maxId;
     }
 
 
-    public Map<Integer, User> getUsersMap() {
-        Map<Integer, User> mapToReturn = new HashMap<>(users);
+    public Map<Long, User> getUsersMap() {
+        Map<Long, User> mapToReturn = new HashMap<>(users);
         return mapToReturn;
     }
 }

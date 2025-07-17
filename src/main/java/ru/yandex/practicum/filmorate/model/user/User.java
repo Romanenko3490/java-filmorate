@@ -1,9 +1,6 @@
 package ru.yandex.practicum.filmorate.model.user;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -12,7 +9,7 @@ import java.util.Set;
 
 @Data
 public class User {
-    private Integer id;
+    private Long id;
 
     @Email(message = "Invalid e-mail format")
     @NotBlank(message = "Email can not be blank or empty")
@@ -20,6 +17,7 @@ public class User {
 
     @NotNull(message = "Login can not be empty")
     @NotBlank(message = "login can not be blank")
+    @Pattern(regexp = "\\S+", message = "Login can not contain spaces")
     private String login;
 
     private String name;
@@ -27,13 +25,16 @@ public class User {
     @Past(message = "Birthday can not be in future")
     private LocalDate birthday;
 
-    private Set<Integer> friendList = new HashSet<>();
+    private Set<Long> friendList = new HashSet<>();
 
-    public User(Integer id, String email, String login, String name, LocalDate birthday) {
+    public User(Long id, String email, String login, String name, LocalDate birthday) {
         this.id = id;
         this.email = email;
         this.login = login;
         this.name = (name == null || name.isBlank()) ? login : name;
         this.birthday = birthday;
+    }
+
+    public User() {
     }
 }

@@ -47,11 +47,11 @@ public class FilmDbService {
                 .collect(Collectors.toList());
     }
 
-    public FilmDto getFilmById(long film_id) {
-        log.info("Getting film by id: {}", film_id);
-        return filmRepository.getFilmById(film_id)
+    public FilmDto getFilmById(long filmId) {
+        log.info("Getting film by id: {}", filmId);
+        return filmRepository.getFilmById(filmId)
                 .map(FIlmMapper::mapToFilmDto)
-                .orElseThrow(() -> new NotFoundException("Film with id: " + film_id));
+                .orElseThrow(() -> new NotFoundException("Film with id: " + filmId));
     }
 
     public FilmDto addFilm(NewFilmRequest request) {
@@ -77,7 +77,6 @@ public class FilmDbService {
         Film film = filmRepository.getFilmById(filmId)
                 .orElseThrow(() -> new NotFoundException("Film not found with id: " + filmId));
 
-        // Частичное обновление полей
         if (request.getName() != null) film.setName(request.getName());
         if (request.getDescription() != null) film.setDescription(request.getDescription());
         if (request.getReleaseDate() != null) film.setReleaseDate(request.getReleaseDate());

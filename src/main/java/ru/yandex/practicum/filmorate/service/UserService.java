@@ -49,8 +49,7 @@ public class UserService {
     public User getUser(Long id) {
         if (userStorage.getUser(id).isPresent()) {
             return userStorage.getUser(id).get();
-        }
-        else  {
+        } else {
             throw new NotFoundException("User with id " + id);
         }
     }

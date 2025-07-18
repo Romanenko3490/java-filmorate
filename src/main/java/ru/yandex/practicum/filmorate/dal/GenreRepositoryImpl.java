@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.dal;
 
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -15,22 +14,29 @@ import java.util.Optional;
 @Repository
 @RequiredArgsConstructor
 public class GenreRepositoryImpl implements GenreRepository {
+    private static final String EXISTS_BY_ID_QUERY =
+            "SELECT EXISTS(SELECT 1 FROM genre WHERE genre_id = ?)";
+    private static final String FIND_BY_ID_QUERY =
+            "SELECT * FROM genre WHERE genre_id = ?";
+    private static final String FIND_ALL_QUERY =
+            "SELECT * FROM genre ORDER BY genre_id";
+
     private final JdbcTemplate jdbc;
 
     @Override
     public boolean existsById(int genreId) {
-        String sql = "SELECT EXISTS(SELECT 1 FROM genre WHERE genre_id = ?)";
-        return Boolean.TRUE.equals(jdbc.queryForObject(sql, Boolean.class, genreId));
+        return Boolean.TRUE.equals(jdbc.queryForObject(EXISTS_BY_ID_QUERY, Boolean.class, genreId));
     }
 
     @Override
     public Optional<Genre> findById(int genreId) {
         log.debug("Getting genre by id: {}", genreId);
-        String sql = "SELECT * FROM genre WHERE genre_id = ?";
         try {
-            return Optional.ofNullable(jdbc.queryForObject(sql, (rs, rowNum) ->
-                            new Genre(rs.getInt("genre_id"), rs.getString("name"))
-                    , genreId));
+            return Optional.ofNullable(jdbc.queryForObject(
+                    FIND_BY_ID_QUERY,
+                    (rs, rowNum) -> new Genre(rs.getInt("genre_id"), rs.getString("name")),
+                    genreId
+            ));
         } catch (EmptyResultDataAccessException e) {
             log.warn("Genre not found with id: {}", genreId);
             return Optional.empty();
@@ -40,8 +46,9 @@ public class GenreRepositoryImpl implements GenreRepository {
     @Override
     public List<Genre> findAll() {
         log.debug("Getting all genres");
-        String sql = "SELECT * FROM genre ORDER BY genre_id";
-        return jdbc.query(sql, (rs, rowNum) ->
-                new Genre(rs.getInt("genre_id"), rs.getString("name")));
+        return jdbc.query(
+                FIND_ALL_QUERY,
+                (rs, rowNum) -> new Genre(rs.getInt("genre_id"), rs.getString("name"))
+        );
     }
 }

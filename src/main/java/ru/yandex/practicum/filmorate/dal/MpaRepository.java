@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface MpaRepository {
-    boolean existsById(int mpaId);        // Проверка существования MPA по ID
-    Optional<MpaRating> findById(int mpaId); // Получение MPA (пригодится для других методов)
+    boolean existsById(int mpaId);
+
+    Optional<MpaRating> findById(int mpaId);
+
     List<MpaRating> findAll();
 }

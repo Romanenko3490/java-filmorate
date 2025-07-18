@@ -25,7 +25,7 @@ public class UserRowMapper implements RowMapper<User> {
             user.setBirthday(ts.toLocalDateTime().toLocalDate());
 
             return user;
-        }  catch (SQLException e) {
+        } catch (SQLException e) {
             log.error("Maping Error", e);
             throw e;
         }

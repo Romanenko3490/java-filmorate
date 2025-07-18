@@ -17,7 +17,6 @@ import ru.yandex.practicum.filmorate.model.user.User;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -77,6 +76,7 @@ public class UserDbService {
         friendshipRepository.addFriend(userId, friendId);
         log.info("User {} added user {} as friend", userId, friendId);
     }
+
     public void confirmFriend(long userId, long friendId) {
         validateFriendshipOperation(userId, friendId);
         friendshipRepository.confirmFriend(userId, friendId);

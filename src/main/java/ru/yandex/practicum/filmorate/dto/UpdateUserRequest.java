@@ -13,8 +13,6 @@ public class UpdateUserRequest {
     private LocalDate birthday;
 
 
-
-
     public boolean isEmptyRequest() {
         return id == 0 && !hasEmail() && !hasLogin() && !hasName() && !hasBirthday();
     }

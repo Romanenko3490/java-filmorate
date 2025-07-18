@@ -57,7 +57,6 @@ public class FilmService {
             log.error("Film id is null");
             throw new ValidationException("Film id cannot be null");
         }
-        // validateFilm(newFilm);
 
         try {
             if (!filmStorage.getFilmsMap().containsKey(newFilm.getId())) {

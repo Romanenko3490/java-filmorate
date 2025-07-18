@@ -37,7 +37,8 @@ public class Film {
         this.duration = duration;
     }
 
-    public Film() {}
+    public Film() {
+    }
 
     @AssertTrue(message = "Release date must be on or after 1895-12-28")
     public boolean hasReleaseDate() {

@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.dal;
 
-
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
@@ -10,11 +9,7 @@ import java.util.List;
 
 @Repository
 public class FriendshipRepository {
-    private final JdbcTemplate jdbc;
-    private final UserRowMapper userRowMapper;
-
-    private static final String ADD_FRIEND_QUERY =
-            "INSERT INTO friendship (user_id, friend_id) VALUES (?, ?)";
+    private static final String ADD_FRIEND_QUERY = "INSERT INTO friendship (user_id, friend_id) VALUES (?, ?)";
     private static final String CONFIRM_FRIEND_QUERY =
             "UPDATE friendship SET status = 'CONFIRMED' WHERE user_id = ? AND friend_id = ?";
     private static final String REMOVE_FRIEND_QUERY =
@@ -29,6 +24,9 @@ public class FriendshipRepository {
                     "JOIN friendship f2 ON u.user_id = f2.friend_id WHERE f1.user_id = ? AND f2.user_id = ?";
     private static final String CHECK_FRIENDSHIP_QUERY =
             "SELECT COUNT(*) FROM friendship WHERE user_id = ? AND friend_id = ?";
+
+    private final JdbcTemplate jdbc;
+    private final UserRowMapper userRowMapper;
 
     public FriendshipRepository(JdbcTemplate jdbc, UserRowMapper userRowMapper) {
         this.jdbc = jdbc;
@@ -55,7 +53,6 @@ public class FriendshipRepository {
         return jdbc.query(GET_PENDING_REQUESTS_QUERY, userRowMapper, userId);
     }
 
-
     public List<User> getCommonFriends(long userId, long otherId) {
         return jdbc.query(GET_COMMON_FRIENDS_QUERY, userRowMapper, userId, otherId);
     }
@@ -70,4 +67,3 @@ public class FriendshipRepository {
         return count != null && count > 0;
     }
 }
-

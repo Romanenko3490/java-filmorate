@@ -74,7 +74,6 @@ public class FilmDbService {
     }
 
     public FilmDto updateFilm(long filmId, UpdateFilmRequest request) {
-        // Проверка существования фильма
         Film film = filmRepository.getFilmById(filmId)
                 .orElseThrow(() -> new NotFoundException("Film not found with id: " + filmId));
 
@@ -97,10 +96,8 @@ public class FilmDbService {
         userRepository.getUser(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        // Добавляем лайк в БД
         filmRepository.addLike(filmId, userId);
 
-        // Возвращаем обновлённый фильм
         return filmRepository.getFilmById(filmId)
                 .map(FIlmMapper::mapToFilmDto)
                 .orElseThrow(() -> new NotFoundException("Film not found after like"));

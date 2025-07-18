@@ -20,7 +20,7 @@ import java.util.*;
 @Repository
 @Primary
 public class FilmRepository extends BaseRepository<Film> implements FilmStorage {
-    private static final String FIND_ALL_QUERY = "SELECT f.*, m.mpa_id, m.code AS mpa_code, m.description AS mpa_description " +
+    private static final String FIND_ALL_QUERY = "SELECT f.*, m.mpa_id, m.mpa_name, m.description AS mpa_description " +
             "FROM films f LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id";
 
     private static final String FIND_BY_ID_QUERY = FIND_ALL_QUERY + " WHERE f.film_id = ?";
@@ -42,7 +42,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private static final String DELETE_LIKE_QUERY = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
 
     private static final String GET_POPULAR_FILMS_QUERY =
-            "SELECT f.*, m.mpa_id, m.code AS mpa_code, m.description AS mpa_description " +
+            "SELECT f.*, m.mpa_id, m.mpa_name, m.description AS mpa_description " +
                     "FROM films f " +
                     "LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
                     "WHERE f.film_id IN (SELECT film_id FROM film_likes) " +

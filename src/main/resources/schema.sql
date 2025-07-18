@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS mpa_rating CASCADE;
 -- Создание таблиц
 CREATE TABLE IF NOT EXISTS mpa_rating (
     mpa_id      INT PRIMARY KEY,
-    code        VARCHAR(10) NOT NULL UNIQUE,
+    mpa_name        VARCHAR(10) NOT NULL UNIQUE,
     description VARCHAR(200)
 );
 

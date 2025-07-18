@@ -7,7 +7,7 @@ public class MpaMapper {
     public static MpaDto mapToMpaDto(MpaRating mpa) {
         MpaDto dto = new MpaDto();
         dto.setId(mpa.getId());
-        dto.setName(mpa.getCode());
+        dto.setName(mpa.getName());
         return dto;
     }
 }

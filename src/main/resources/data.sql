@@ -1,5 +1,5 @@
 -- MPA рейтинги
-INSERT INTO mpa_rating (mpa_id, code, description) VALUES
+INSERT INTO mpa_rating (mpa_id, mpa_name, description) VALUES
                                                        (1, 'G', 'Нет возрастных ограничений'),
                                                        (2, 'PG', 'Рекомендуется присутствие родителей'),
                                                        (3, 'PG-13', 'Детям до 13 лет просмотр не желателен'),

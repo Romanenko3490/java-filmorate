@@ -20,7 +20,7 @@ public class MpaRepositoryImpl implements MpaRepository {
     private final RowMapper<MpaRating> mpaRowMapper = (rs, rowNum) -> {
         MpaRating mpa = new MpaRating();
         mpa.setId(rs.getInt("mpa_id"));
-        mpa.setCode(rs.getString("code"));
+        mpa.setName(rs.getString("mpa_name"));
         mpa.setDescription(rs.getString("description"));
         return mpa;
     };

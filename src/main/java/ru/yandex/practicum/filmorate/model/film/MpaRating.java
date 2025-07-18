@@ -11,13 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public class MpaRating {
     private int id;
-    private String code;
+    private String name;
     private String description;
 
     public MpaRating(String code) {
         Rating rating = Rating.valueOf(code.toUpperCase());
         this.id = rating.getId();
-        this.code = code;
+        this.name = code;
         this.description = rating.getDescription();
     }
 
@@ -34,18 +34,18 @@ enum Rating {
     NC_17(5,"NC-17", "Лицам до 18 лет просмотр запрещён");
 
     private final int id;
-    private final String code;
+    private final String name;
     private final String description;
 
     Rating(int id, String code, String description) {
         this.id = id;
-        this.code = code;
+        this.name = code;
         this.description = description;
     }
 
     public static Rating fromCode(String code) {
         for (Rating rating : values()) {
-            if (rating.code.equalsIgnoreCase(code)) {
+            if (rating.name.equalsIgnoreCase(code)) {
                 return rating;
             }
         }

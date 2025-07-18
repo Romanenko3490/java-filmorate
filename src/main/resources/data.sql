@@ -1,5 +1,5 @@
 -- MPA рейтинги
-INSERT INTO mpa_rating (mpa_id, mpa_name, description) VALUES
+MERGE INTO mpa_rating (mpa_id, mpa_name, description) VALUES
                                                        (1, 'G', 'Нет возрастных ограничений'),
                                                        (2, 'PG', 'Рекомендуется присутствие родителей'),
                                                        (3, 'PG-13', 'Детям до 13 лет просмотр не желателен'),
@@ -7,7 +7,7 @@ INSERT INTO mpa_rating (mpa_id, mpa_name, description) VALUES
                                                        (5, 'NC-17', 'Лицам до 18 лет просмотр запрещён');
 
 -- Жанры
-INSERT INTO genre (genre_id, name) VALUES
+MERGE INTO genre (genre_id, name) VALUES
                                        (1, 'Комедия'),
                                        (2, 'Драма'),
                                        (3, 'Мультфильм'),

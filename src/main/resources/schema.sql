@@ -1,13 +1,3 @@
--- Удаление таблиц (если существуют)
-DROP TABLE IF EXISTS film_likes CASCADE;
-DROP TABLE IF EXISTS film_genre CASCADE;
-DROP TABLE IF EXISTS friendship CASCADE;
-DROP TABLE IF EXISTS films CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
-DROP TABLE IF EXISTS genre CASCADE;
-DROP TABLE IF EXISTS mpa_rating CASCADE;
-
--- Создание таблиц
 CREATE TABLE IF NOT EXISTS mpa_rating (
     mpa_id      INT PRIMARY KEY,
     mpa_name        VARCHAR(10) NOT NULL UNIQUE,

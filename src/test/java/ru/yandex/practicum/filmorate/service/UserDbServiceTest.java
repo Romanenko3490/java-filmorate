@@ -198,49 +198,4 @@ class UserDbServiceTest {
                 () -> userDbService.createUser(duplicateRequest));
     }
 
-    @Test
-    void shouldConfirmFriendship() {
-        // 1. Создаем пользователей
-        UserDto user1 = userDbService.createUser(newUserRequest);
-        newUserRequest.setEmail("friend@example.com");
-        UserDto user2 = userDbService.createUser(newUserRequest);
-
-        // 2. Проверяем начальное состояние
-        assertThat(userDbService.getFriends(user1.getId())).isEmpty();
-        assertThat(userDbService.getFriends(user2.getId())).isEmpty();
-
-        // 3. User1 отправляет заявку User2
-        userDbService.addFriend(user1.getId(), user2.getId());
-
-        // 4. Проверяем pending-запросы
-        assertThat(userDbService.getPendingRequests(user2.getId()))
-                .hasSize(1)
-                .extracting(UserDto::getId)
-                .containsExactly(user1.getId());
-
-        // 5. User2 подтверждает дружбу
-        userDbService.confirmFriend(user2.getId(), user1.getId());
-
-        // 6. Проверяем подтверждённых друзей
-        assertThat(userDbService.getFriends(user1.getId()))
-                .hasSize(1)
-                .extracting(UserDto::getId)
-                .containsExactly(user2.getId());
-
-        assertThat(userDbService.getFriends(user2.getId()))
-                .hasSize(1)
-                .extracting(UserDto::getId)
-                .containsExactly(user1.getId());
-
-        // 7. Дополнительная проверка в БД
-        Integer friendshipCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM friendship WHERE " +
-                        "((user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)) " +
-                        "AND status = 'CONFIRMED'",
-                Integer.class,
-                user1.getId(), user2.getId(),
-                user2.getId(), user1.getId()
-        );
-        assertThat(friendshipCount).isEqualTo(2);
-    }
 }

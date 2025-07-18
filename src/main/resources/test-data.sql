@@ -1,5 +1,5 @@
 -- MPA рейтинги
-INSERT INTO mpa_rating (mpa_id, mpa_name, description)
+MERGE INTO mpa_rating (mpa_id, mpa_name, description)
 VALUES
     (1, 'G', 'Нет возрастных ограничений'),
     (2, 'PG', 'Рекомендуется присутствие родителей'),
@@ -8,7 +8,7 @@ VALUES
     (5, 'NC-17', 'Лицам до 18 лет просмотр запрещён');
 
 -- Жанры
-INSERT INTO genre (genre_id, name)
+MERGE  INTO genre (genre_id, name)
 VALUES
     (1, 'Комедия'),
     (2, 'Драма'),
@@ -18,7 +18,7 @@ VALUES
     (6, 'Боевик');
 
 -- Пользователи для тестов
-INSERT INTO users (user_id, email, login, name, birthday)
+MERGE  INTO users (user_id, email, login, name, birthday)
 VALUES
     (1, 'user1@example.com', 'login1', 'User One', '1990-01-01'),
     (2, 'user2@example.com', 'login2', 'User Two', '1995-01-01');

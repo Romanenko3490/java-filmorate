@@ -51,7 +51,7 @@ public class FriendshipRepository {
 
     // Упрощаем confirmFriend (по сути дублирует addFriend)
     public void confirmFriend(long userId, long friendId) {
-        jdbc.update(ADD_FRIEND_QUERY, userId, friendId);
+        jdbc.update(CONFIRM_FRIEND_QUERY, userId, friendId);
     }
 
     public void removeFriend(long userId, long friendId) {

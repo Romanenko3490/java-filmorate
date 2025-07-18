@@ -33,9 +33,9 @@ public class FilmDbController {
         return filmDbService.getAllFilms();
     }
 
-    @GetMapping("/{film_id}")
-    public FilmDto getFilmById(@PathVariable long film_id) {
-        return filmDbService.getFilmById(film_id);
+    @GetMapping("/{filmId}")
+    public FilmDto getFilmById(@PathVariable long filmId) {
+        return filmDbService.getFilmById(filmId);
     }
 
     @GetMapping("/popular")
@@ -64,10 +64,10 @@ public class FilmDbController {
         return filmDbService.updateFilm(request.getId(), request);
     }
 
-    @PutMapping("/{film_id}/like/{userId}")
-    public FilmDto likeFilm(@PathVariable long film_id,
+    @PutMapping("/{filmId}/like/{userId}")
+    public FilmDto likeFilm(@PathVariable long filmId,
                             @PathVariable long userId) {
-        return filmDbService.addLike(film_id, userId);
+        return filmDbService.addLike(filmId, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")

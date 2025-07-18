@@ -30,10 +30,10 @@ public class UserDbController {
         return userDbService.getAllUsers();
     }
 
-    @GetMapping("/{user_id}")
-    public UserDto getUser(@PathVariable long user_id) {
+    @GetMapping("/{userId}")
+    public UserDto getUser(@PathVariable long userId) {
 
-        return userDbService.getUserById(user_id);
+        return userDbService.getUserById(userId);
     }
 
     @PostMapping

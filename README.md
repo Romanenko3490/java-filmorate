@@ -71,13 +71,6 @@
 
 ```mermaid
 erDiagram
-    users ||--o{ friendship : "friends"
-    users ||--o{ film_likes : "likes"
-    films ||--o{ film_genre : "has"
-    films ||--o{ film_likes : "receives"
-    films }|--|| mpa_rating : "rated"
-    film_genre }|--|| genre : "of"
-
     users {
         int user_id
         string email
@@ -122,3 +115,10 @@ erDiagram
         int film_id
         int user_id
     }
+
+    users ||--o{ friendship : "имеет друзей"
+    users ||--o{ film_likes : "ставит лайки"
+    films ||--o{ film_genre : "имеет жанры"
+    films ||--o{ film_likes : "получает лайки"
+    films }|--|| mpa_rating : "имеет рейтинг"
+    film_genre }|--|| genre : "относится к"

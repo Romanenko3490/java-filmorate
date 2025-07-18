@@ -59,7 +59,6 @@ class UserDbServiceTest {
 
     @Test
     void shouldCreateAndGetUser() {
-        // Очищаем таблицы перед тестом
         jdbcTemplate.update("DELETE FROM friendship");
         jdbcTemplate.update("DELETE FROM users");
 
@@ -75,10 +74,8 @@ class UserDbServiceTest {
     @Test
     @Transactional
     void shouldUpdateUser() {
-        // 1. Создаем пользователя
         UserDto createdUser = userDbService.createUser(newUserRequest);
 
-        // 2. Готовим данные для обновления
         UpdateUserRequest updateRequest = new UpdateUserRequest();
         updateRequest.setId(createdUser.getId()); // Используем реальный ID
         updateRequest.setEmail("newemail@example.com");
@@ -86,16 +83,13 @@ class UserDbServiceTest {
         updateRequest.setName("New Name");
         updateRequest.setBirthday(LocalDate.of(1995, 1, 1));
 
-        // 3. Обновляем пользователя
         UserDto updatedUser = userDbService.updateUser(createdUser.getId(), updateRequest);
 
-        // 4. Проверяем обновленные данные
         assertThat(updatedUser.getId()).isEqualTo(createdUser.getId());
         assertThat(updatedUser.getEmail()).isEqualTo("newemail@example.com");
         assertThat(updatedUser.getLogin()).isEqualTo("newlogin");
         assertThat(updatedUser.getName()).isEqualTo("New Name");
 
-        // 5. Проверяем, что данные сохранились в БД
         UserDto dbUser = userDbService.getUserById(createdUser.getId());
         assertThat(dbUser.getEmail()).isEqualTo("newemail@example.com");
     }
@@ -119,33 +113,26 @@ class UserDbServiceTest {
 
     @Test
     void shouldAddAndRemoveFriend() {
-        // Создаем пользователей
         UserDto user1 = userDbService.createUser(newUserRequest);
         newUserRequest.setEmail("friend@example.com");
         newUserRequest.setLogin("friendlogin");
         UserDto user2 = userDbService.createUser(newUserRequest);
 
-        // 1. Добавляем друга (статус PENDING)
         userDbService.addFriend(user1.getId(), user2.getId());
 
-        // 2. Подтверждаем дружбу
         userDbService.confirmFriend(user2.getId(), user1.getId());
 
-        // 3. Проверяем список друзей (теперь должен содержать подтверждённого друга)
         assertThat(userDbService.getFriends(user1.getId()))
                 .extracting(UserDto::getId)
                 .containsExactly(user2.getId());
 
-        // 4. Удаляем друга
         userDbService.removeFriend(user1.getId(), user2.getId());
 
-        // 5. Проверяем, что список друзей пуст
         assertThat(userDbService.getFriends(user1.getId())).isEmpty();
     }
 
     @Test
     void shouldGetCommonFriends() {
-        // Создаем трех пользователей
         UserDto user1 = userDbService.createUser(newUserRequest);
 
         newUserRequest.setEmail("friend1@example.com");
@@ -156,11 +143,9 @@ class UserDbServiceTest {
         newUserRequest.setLogin("friend2login");
         UserDto user3 = userDbService.createUser(newUserRequest);
 
-        // user1 и user2 дружат с user3
         userDbService.addFriend(user1.getId(), user3.getId());
         userDbService.addFriend(user2.getId(), user3.getId());
 
-        // Проверяем общих друзей
         List<UserDto> commonFriends = userDbService.getCommonFriends(user1.getId(), user2.getId());
         assertThat(commonFriends).extracting(UserDto::getId).containsExactly(user3.getId());
     }
@@ -183,7 +168,6 @@ class UserDbServiceTest {
 
     @Test
     void shouldThrowWhenEmailExists() {
-        // Создаем первого пользователя
         userDbService.createUser(newUserRequest);
 
         // Пытаемся создать второго пользователя с тем же email
@@ -193,7 +177,6 @@ class UserDbServiceTest {
         duplicateRequest.setName("Different Name");
         duplicateRequest.setBirthday(LocalDate.now());
 
-        // Ожидаем наше кастомное исключение
         assertThrows(ru.yandex.practicum.filmorate.exception.ValidationException.class,
                 () -> userDbService.createUser(duplicateRequest));
     }

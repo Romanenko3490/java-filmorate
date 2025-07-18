@@ -118,13 +118,11 @@ class FilmRepositoryTest {
         Optional<Film> filmWithLike = filmRepository.getFilmById(addedFilm.getId());
         assertThat(filmWithLike).isPresent();
 
-        // Проверяем, что фильм есть в списке популярных
         List<Film> popularFilms = filmRepository.getPopularFilms(10);
         assertThat(popularFilms).extracting(Film::getId).contains(addedFilm.getId());
 
         filmRepository.removeLike(addedFilm.getId(), 1L);
 
-        // Проверяем, что фильм больше не в списке популярных
         List<Film> filmsAfterRemove = filmRepository.getPopularFilms(10);
         assertThat(filmsAfterRemove).extracting(Film::getId).doesNotContain(addedFilm.getId());
     }
@@ -143,7 +141,6 @@ class FilmRepositoryTest {
         film2.setMpa(mpa);
         film2 = filmRepository.addFilm(film2);
 
-        // Добавляем лайки - film2 должен быть популярнее
         filmRepository.addLike(film1.getId(), 1L);
         filmRepository.addLike(film2.getId(), 1L);
         filmRepository.addLike(film2.getId(), 2L);

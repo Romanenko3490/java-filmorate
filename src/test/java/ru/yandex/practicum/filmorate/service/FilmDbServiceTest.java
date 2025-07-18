@@ -118,21 +118,17 @@ class FilmDbServiceTest {
     @Test
     @Transactional
     void shouldAddAndRemoveLike() {
-        // 1. Создаём фильм
         FilmDto film = filmDbService.addFilm(newFilmRequest);
 
-        // 2. Добавляем лайк
         filmDbService.addLike(film.getId(), 1L);
         assertThat(countLikes(film.getId(), 1L)).isEqualTo(1);
 
-        // 3. Удаляем лайк
         int deleted = jdbcTemplate.update(
                 "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?",
                 film.getId(), 1L
         );
         log.info("Deleted {} rows", deleted);
 
-        // 4. Проверяем
         assertThat(countLikes(film.getId(), 1L))
                 .as("Лайк должен быть удалён из БД")
                 .isEqualTo(0);
@@ -162,7 +158,6 @@ class FilmDbServiceTest {
         anotherFilm.setMpa(mpa);
         FilmDto film2 = filmDbService.addFilm(anotherFilm);
 
-        // Добавляем лайки - film2 должен быть популярнее
         filmDbService.addLike(film1.getId(), 1L);
         filmDbService.addLike(film2.getId(), 1L);
         filmDbService.addLike(film2.getId(), 2L);

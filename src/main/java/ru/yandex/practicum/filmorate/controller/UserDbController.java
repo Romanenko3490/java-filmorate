@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
@@ -36,7 +37,7 @@ public class UserDbController {
     }
 
     @PostMapping
-    public UserDto addUser(@RequestBody NewUserRequest request) {
+    public UserDto addUser(@Valid @RequestBody NewUserRequest request) {
         return userDbService.createUser(request);
     }
 

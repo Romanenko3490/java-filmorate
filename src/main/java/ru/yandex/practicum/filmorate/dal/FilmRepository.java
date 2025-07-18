@@ -57,11 +57,11 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private static final String GET_POPULAR_FILMS_QUERY =
             "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
                     "m.mpa_id, m.mpa_name, m.description AS mpa_description " +
-                    "FROM films f LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
-                    "WHERE f.film_id IN (SELECT film_id FROM film_likes) " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
+                    "WHERE EXISTS (SELECT 1 FROM film_likes WHERE film_id = f.film_id) " +
                     "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) DESC " +
                     "LIMIT ?";
-
     private static final String CHECK_MPA_EXISTS_QUERY =
             "SELECT COUNT(*) FROM mpa_rating WHERE mpa_id = ?";
     // endregion
@@ -114,6 +114,11 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     @Override
     @Transactional
     public Film updateFilm(Film film) {
+        // Сначала проверяем существование фильма
+        if (!filmExists(film.getId())) {
+            throw new NotFoundException("Film not found with id: " + film.getId());
+        }
+
         int updated = jdbc.update(UPDATE_FILM_QUERY,
                 film.getName(),
                 film.getDescription(),
@@ -130,9 +135,17 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         return film;
     }
 
+    private boolean filmExists(long id) {
+        String query = "SELECT COUNT(*) FROM films WHERE film_id = ?";
+        Integer count = jdbc.queryForObject(query, Integer.class, id);
+        return count != null && count > 0;
+    }
+
     public void deleteFilm(long id) {
         jdbc.update(DELETE_FILM_QUERY, id);
     }
+
+
     // endregion
 
     // region Additional Film Operations
@@ -166,7 +179,12 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     }
 
     public void removeLike(long filmId, long userId) {
-        jdbc.update(DELETE_FILM_LIKE_QUERY, filmId, userId);
+        int rowsDeleted = jdbc.update(DELETE_FILM_LIKE_QUERY, filmId, userId);
+        log.debug("Deleted {} rows for filmId {} and userId {}", rowsDeleted, filmId, userId);
+        if (rowsDeleted == 0) {
+            throw new NotFoundException(String.format(
+                    "Like not found for filmId %d and userId %d", filmId, userId));
+        }
     }
     // endregion
 
@@ -222,4 +240,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         return count != null && count > 0;
     }
     // endregion
+
+
 }

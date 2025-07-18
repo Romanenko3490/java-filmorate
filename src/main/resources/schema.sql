@@ -37,11 +37,14 @@ CREATE TABLE IF NOT EXISTS films (
 );
 
 CREATE TABLE IF NOT EXISTS friendship (
-                                          user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
-    friend_id INT REFERENCES users(user_id) ON DELETE CASCADE,
-    status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'CONFIRMED')),
+                                          user_id INT NOT NULL,
+                                          friend_id INT NOT NULL,
+                                          status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, friend_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (friend_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CHECK (status IN ('PENDING', 'CONFIRMED')),
     CHECK (user_id != friend_id)
     );
 

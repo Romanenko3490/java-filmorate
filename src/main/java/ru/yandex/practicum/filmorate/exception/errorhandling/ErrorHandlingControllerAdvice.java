@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 
 import java.util.List;
@@ -67,6 +68,14 @@ public class ErrorHandlingControllerAdvice {
     @ExceptionHandler(Throwable.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ViolationErrorResponse handleInternalServerException(final Throwable ex) {
+        log.error("Internal Server Error", ex);
+        return new ViolationErrorResponse(List.of(new Violation(null, ex.getMessage())));
+    }
+
+    @ResponseBody
+    @ExceptionHandler(InternalServerException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ViolationErrorResponse handleInternalServerException(final InternalServerException ex) {
         log.error("Internal Server Error", ex);
         return new ViolationErrorResponse(List.of(new Violation(null, ex.getMessage())));
     }

@@ -1,15 +1,12 @@
-package ru.yandex.practicum.filmorate.model.user;
+package ru.yandex.practicum.filmorate.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 @Data
-public class User {
-    private Long id;
+public class NewUserRequest {
 
     @Email(message = "Invalid e-mail format")
     @NotBlank(message = "Email can not be blank or empty")
@@ -24,17 +21,4 @@ public class User {
 
     @Past(message = "Birthday can not be in future")
     private LocalDate birthday;
-
-    private Set<Long> friendList = new HashSet<>();
-
-    public User(Long id, String email, String login, String name, LocalDate birthday) {
-        this.id = id;
-        this.email = email;
-        this.login = login;
-        this.name = (name == null || name.isBlank()) ? login : name;
-        this.birthday = birthday;
-    }
-
-    public User() {
-    }
 }

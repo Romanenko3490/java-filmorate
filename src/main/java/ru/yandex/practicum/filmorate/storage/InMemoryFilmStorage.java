@@ -9,24 +9,30 @@ import ru.yandex.practicum.filmorate.model.film.Film;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
 
-    private Map<Integer, Film> films = new HashMap<>();
+    private Map<Long, Film> films = new HashMap<>();
 
     public Collection<Film> getFilms() {
         return films.values();
     }
 
-    public Film getFilmById(int id) {
+    public Optional<Film> getFilmById(long id) {
         log.info("Get film by id: {}", id);
-        if (!films.containsKey(id)) {
-            log.error("Film not found by id: {}", id);
-            throw new NotFoundException("Film not found by id: " + id);
-        }
-        return films.get(id);
+        return Optional.ofNullable(films.get(id))
+                .map(film -> {
+                    log.info("Get film by id: {}", id);
+                    return film;
+                })
+                .or(() -> {
+                    log.info("No film with id {}", id);
+                    throw new NotFoundException("No film with id " + id);
+                });
+
     }
 
     public Film addFilm(Film newFilm) {
@@ -65,14 +71,14 @@ public class InMemoryFilmStorage implements FilmStorage {
         return oldFilm;
     }
 
-    public Map<Integer, Film> getFilmsMap() {
+    public Map<Long, Film> getFilmsMap() {
         return films;
     }
 
 
-    private int getNextFilmId() {
-        int maxId = films.values().stream()
-                .mapToInt(Film::getId)
+    private long getNextFilmId() {
+        long maxId = films.values().stream()
+                .mapToLong(Film::getId)
                 .max()
                 .orElse(0);
         return ++maxId;

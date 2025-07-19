@@ -9,8 +9,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 
 import java.sql.PreparedStatement;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RequiredArgsConstructor
 public class BaseRepository<T> {
@@ -62,4 +61,16 @@ public class BaseRepository<T> {
     }
 
 
+    protected boolean existsById(String query, Object... args) {
+        return Boolean.TRUE.equals(jdbc.queryForObject(query, Boolean.class, args));
+    }
+
+    protected Set<Integer> findAllExistingIds(String baseQuery, Set<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new HashSet<>();
+        }
+        String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
+        String sql = String.format(baseQuery, placeholders);
+        return new HashSet<>(jdbc.queryForList(sql, ids.toArray(), Integer.class));
+    }
 }

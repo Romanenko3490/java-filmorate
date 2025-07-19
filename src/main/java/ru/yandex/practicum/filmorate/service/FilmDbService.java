@@ -12,10 +12,12 @@ import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.FIlmMapper;
 import ru.yandex.practicum.filmorate.model.film.Film;
+import ru.yandex.practicum.filmorate.model.film.Genre;
 
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,17 +57,24 @@ public class FilmDbService {
     }
 
     public FilmDto addFilm(NewFilmRequest request) {
-        // Проверяем существование MPA перед добавлением
         if (!mpaRepository.existsById(request.getMpa().getId())) {
             throw new NotFoundException("MPA rating with id " + request.getMpa().getId() + " not found");
         }
 
-        if (request.getGenres() != null) {
-            request.getGenres().forEach(genre -> {
-                if (!genreRepository.existsById(genre.getId())) {
-                    throw new NotFoundException("Genre with id " + genre.getId() + " not found");
-                }
-            });
+        if (request.getGenres() != null && !request.getGenres().isEmpty()) {
+            Set<Integer> genreIds = request.getGenres().stream()
+                    .map(Genre::getId)
+                    .collect(Collectors.toSet());
+
+            Set<Integer> existingGenreIds = genreRepository.findAllExistingIds(genreIds);
+
+            Set<Integer> missingGenreIds = genreIds.stream()
+                    .filter(id -> !existingGenreIds.contains(id))
+                    .collect(Collectors.toSet());
+
+            if (!missingGenreIds.isEmpty()) {
+                throw new NotFoundException("Genres with ids " + missingGenreIds + " not found");
+            }
         }
 
         Film film = FIlmMapper.mapToFilm(request);

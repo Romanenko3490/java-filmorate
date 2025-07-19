@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.model.film.Genre;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -191,10 +192,13 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     // region Genre Operations
     private void updateFilmGenres(Film film) {
         jdbc.update(DELETE_FILM_GENRES_QUERY, film.getId());
+
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            film.getGenres().forEach(genre ->
-                    jdbc.update(INSERT_FILM_GENRE_QUERY, film.getId(), genre.getId())
-            );
+            List<Object[]> batchArgs = film.getGenres().stream()
+                    .map(genre -> new Object[]{film.getId(), genre.getId()})
+                    .collect(Collectors.toList());
+
+            jdbc.batchUpdate(INSERT_FILM_GENRE_QUERY, batchArgs);
         }
     }
 

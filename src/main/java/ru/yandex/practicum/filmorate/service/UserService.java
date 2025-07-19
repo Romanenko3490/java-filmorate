@@ -5,6 +5,7 @@ package ru.yandex.practicum.filmorate.service;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -16,12 +17,14 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@Qualifier("inMemoryUserService")
+@Deprecated
 public class UserService {
 
     private final UserStorage userStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("inMemoryUserStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -43,8 +46,12 @@ public class UserService {
         }
     }
 
-    public User getUser(Integer id) {
-        return userStorage.getUser(id);
+    public User getUser(Long id) {
+        if (userStorage.getUser(id).isPresent()) {
+            return userStorage.getUser(id).get();
+        } else {
+            throw new NotFoundException("User with id " + id);
+        }
     }
 
     public User updateUser(@Valid User newUser) {
@@ -65,7 +72,7 @@ public class UserService {
 
     }
 
-    public void addFriend(Integer userId, Integer friendId) {
+    public void addFriend(Long userId, Long friendId) {
 
         isPresentInStorage(userId, friendId);
 
@@ -75,7 +82,7 @@ public class UserService {
         log.info("Пользователи {} и {} теперь друзья", userId, friendId);
     }
 
-    public void removeFriend(Integer userId, Integer friendId) {
+    public void removeFriend(Long userId, Long friendId) {
 
         isPresentInStorage(userId, friendId);
 
@@ -85,37 +92,39 @@ public class UserService {
         log.info("Пользователи {} и {} теперь не друзья", userId, friendId);
     }
 
-    public Collection<User> getFriends(Integer userId) {
+    public Collection<User> getFriends(Long userId) {
 
         isPresentInStorage(userId);
 
         User user = userStorage.getUsersMap().get(userId);
         return user.getFriendList().stream()
                 .map(userStorage::getUser)
+                .flatMap(Optional::stream)
                 .collect(Collectors.toList());
     }
 
-    public List<User> getCommonFriends(Integer userId, Integer otherUserId) {
+    public List<User> getCommonFriends(Long userId, Long otherUserId) {
 
         isPresentInStorage(userId, otherUserId);
 
-        Set<Integer> userFriendsId = new HashSet<>(userStorage.getUser(userId).getFriendList());
-        Set<Integer> otherUserFriendsId = new HashSet<>(userStorage.getUser(otherUserId).getFriendList());
+        Set<Long> userFriendsId = new HashSet<>(userStorage.getUser(userId).get().getFriendList());
+        Set<Long> otherUserFriendsId = new HashSet<>(userStorage.getUser(otherUserId).get().getFriendList());
 
         userFriendsId.retainAll(otherUserFriendsId);
 
         return userFriendsId.stream()
                 .map(userStorage::getUser)
+                .flatMap(Optional::stream)
                 .collect(Collectors.toList());
     }
 
-    private void isPresentInStorage(Integer userId) {
+    private void isPresentInStorage(Long userId) {
         if (!userStorage.getUsersMap().containsKey(userId)) {
             throw new NotFoundException("Пользователь с id " + userId + "не найден");
         }
     }
 
-    private void isPresentInStorage(Integer userId, Integer otherUserId) {
+    private void isPresentInStorage(Long userId, Long otherUserId) {
         if (!userStorage.getUsersMap().containsKey(userId)) {
             throw new NotFoundException("Пользователь с id " + userId + "не найден");
         }

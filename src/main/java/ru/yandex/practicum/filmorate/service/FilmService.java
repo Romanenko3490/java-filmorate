@@ -3,7 +3,9 @@ package ru.yandex.practicum.filmorate.service;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.zalando.logbook.attributes.AttributeExtractor;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.film.Film;
@@ -17,15 +19,19 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@Qualifier("inMemoryFilmService")
+@Deprecated
 public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final AttributeExtractor getAttributeExtractor;
 
     @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
+    public FilmService(FilmStorage filmStorage, UserStorage userStorage, AttributeExtractor getAttributeExtractor) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
+        this.getAttributeExtractor = getAttributeExtractor;
     }
 
     public Collection<Film> getAllFilms() {
@@ -37,8 +43,8 @@ public class FilmService {
         return filmStorage.addFilm(film);
     }
 
-    public Film getById(int id) {
-        return filmStorage.getFilmById(id);
+    public Film getById(Long id) {
+        return filmStorage.getFilmById(id).get();
     }
 
     public Film update(@Valid Film newFilm) {
@@ -51,7 +57,6 @@ public class FilmService {
             log.error("Film id is null");
             throw new ValidationException("Film id cannot be null");
         }
-        // validateFilm(newFilm);
 
         try {
             if (!filmStorage.getFilmsMap().containsKey(newFilm.getId())) {
@@ -69,20 +74,20 @@ public class FilmService {
         }
     }
 
-    public void addLike(Integer filmId, Integer userId) {
+    public void addLike(Long filmId, Long userId) {
 
         isPresentInStorage(filmId, userId);
 
-        Film film = filmStorage.getFilmById(filmId);
+        Film film = filmStorage.getFilmById(filmId).get();
         film.getLikes().add(userId);
         log.info("Пользователь id " + userId + " лайкнул фильм id " + filmId);
     }
 
-    public void removeLike(Integer filmId, Integer userId) {
+    public void removeLike(Long filmId, Long userId) {
 
         isPresentInStorage(filmId, userId);
 
-        Film film = filmStorage.getFilmById(filmId);
+        Film film = filmStorage.getFilmById(filmId).get();
         film.getLikes().remove(userId);
         log.info("Пользователь id " + userId + " Удалил лайк с фильма id " + filmId);
     }
@@ -102,7 +107,7 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
-    private void isPresentInStorage(Integer filmId, Integer userId) {
+    private void isPresentInStorage(Long filmId, Long userId) {
         if (!filmStorage.getFilmsMap().containsKey(filmId)) {
             throw new NotFoundException("Фильм с id " + filmId + " не найден");
         }

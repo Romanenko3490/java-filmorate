@@ -135,4 +135,11 @@ public class FilmDbService {
                 .map(FIlmMapper::mapToFilmDto)
                 .collect(Collectors.toList());
     }
+
+    public void removeFilm(long filmId) {
+        if (!filmRepository.deleteFilm(filmId)) {
+            throw new NotFoundException("Film with id " + filmId + " not found");
+        }
+
+    }
 }

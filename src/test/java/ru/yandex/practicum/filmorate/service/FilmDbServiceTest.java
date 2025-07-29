@@ -121,7 +121,7 @@ class FilmDbServiceTest {
         FilmDto film = filmDbService.addFilm(newFilmRequest);
 
         filmDbService.addLike(film.getId(), 1L);
-        assertThat(countLikes(film.getId(), 1L)).isEqualTo(1);
+        assertThat(countFilmLikes(film.getId(), 1L)).isEqualTo(1);
 
         int deleted = jdbcTemplate.update(
                 "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?",
@@ -129,12 +129,12 @@ class FilmDbServiceTest {
         );
         log.info("Deleted {} rows", deleted);
 
-        assertThat(countLikes(film.getId(), 1L))
+        assertThat(countFilmLikes(film.getId(), 1L))
                 .as("Лайк должен быть удалён из БД")
                 .isEqualTo(0);
     }
 
-    private int countLikes(long filmId, long userId) {
+    private int countFilmLikes(long filmId, long userId) {
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM film_likes WHERE film_id = ? AND user_id = ?",
                 Integer.class,
@@ -177,5 +177,41 @@ class FilmDbServiceTest {
     void shouldThrowWhenMpaNotFound() {
         newFilmRequest.getMpa().setId(999);
         assertThrows(NotFoundException.class, () -> filmDbService.addFilm(newFilmRequest));
+    }
+
+    @Test
+    void shouldDeleteFilmAndCascadeRelations() {
+        FilmDto film = filmDbService.addFilm(newFilmRequest);
+
+        filmDbService.addLike(film.getId(), 1L);
+        jdbcTemplate.update("INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)",
+                film.getId(), 1);
+
+        filmDbService.removeFilm(film.getId());
+        assertThrows(NotFoundException.class, () -> filmDbService.getFilmById(film.getId()));
+
+        assertThat(countFilmLikes(film.getId()))
+                .as("likes relations should be deleted")
+                .isZero();
+
+        assertThat(countFilmGenres(film.getId()))
+                .as("genres relations should be deleted")
+                .isZero();
+    }
+
+    private int countFilmLikes(long filmId) {
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM film_likes WHERE film_id = ?",
+                Integer.class,
+                filmId);
+
+        return count != null ? count : 0;
+    }
+
+    private int countFilmGenres(long filmId) {
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM film_genre WHERE film_id = ?",
+                Integer.class,
+                filmId);
+
+        return count != null ? count : 0;
     }
 }

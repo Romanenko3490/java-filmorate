@@ -26,6 +26,8 @@ public class UserRepository extends BaseRepository implements UserStorage {
             "INSERT INTO users(email, login, name, birthday) VALUES (?, ?, ?, ?)";
     private static final String UPDATE_QUERY =
             "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE user_id = ?";
+    private static final String DELETE_QUERY = "DELETE FROM users WHERE user_id = ?";
+
 
     public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -48,6 +50,11 @@ public class UserRepository extends BaseRepository implements UserStorage {
         } catch (EmptyResultDataAccessException ex) {
             return Optional.empty();
         }
+    }
+
+    public boolean deleteUser(long userId) {
+        int deleteUser = jdbc.update(DELETE_QUERY, userId);
+        return deleteUser > 0;
     }
 
     // Modification methods

@@ -142,8 +142,9 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         return count != null && count > 0;
     }
 
-    public void deleteFilm(long id) {
-        jdbc.update(DELETE_FILM_QUERY, id);
+    public boolean deleteFilm(long filmId) {
+        int deleteCount = jdbc.update(DELETE_FILM_QUERY, filmId);
+        return deleteCount > 0;
     }
 
 

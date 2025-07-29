@@ -64,6 +64,12 @@ public class UserDbService {
         return UserMapper.mapToUserDto(updatedUser);
     }
 
+    public void deleteUser(long userId) {
+        if (!userRepository.deleteUser(userId)) {
+            throw new NotFoundException("User not found");
+        }
+    }
+
     // Friendship operations
     public void addFriend(long userId, long friendId) {
         validateUsers(userId, friendId);

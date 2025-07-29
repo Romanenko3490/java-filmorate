@@ -181,4 +181,83 @@ class UserDbServiceTest {
                 () -> userDbService.createUser(duplicateRequest));
     }
 
+    @Test
+    void shouldDeleteUserAndFriendshipCascade() {
+        UserDto user = userDbService.createUser(newUserRequest);
+
+        newUserRequest.setEmail("friend@email.com");
+        newUserRequest.setLogin("friendlogin");
+        UserDto friend = userDbService.createUser(newUserRequest);
+
+        userDbService.addFriend(user.getId(), friend.getId());
+        userDbService.confirmFriend(user.getId(), friend.getId());
+
+        userDbService.deleteUser(user.getId());
+
+        assertThrows(NotFoundException.class, () -> userDbService.getUserById(user.getId()));
+
+        assertThat(countUserFriendships(user.getId()))
+                .as("Friendships should be deleted")
+                .isZero();
+
+        assertThat(countUserFriendships(friend.getId()))
+                .as("Backlink Friendships should be deleted")
+                .isZero();
+    }
+
+    void shouldDeleteUserWithReviewsAndLikes() {
+        UserDto user = userDbService.createUser(newUserRequest);
+
+        jdbcTemplate.update("INSERT INTO films (name, description, release_date, duration, mpa_rating_id) " +
+                        "VALUES (?, ?, ?, ?, ?)",
+                "Test Film", "Desc", LocalDate.now(), 120, 1);
+
+        Long filmId = jdbcTemplate.queryForObject("SELECT film_id FROM films LIMIT 1", Long.class);
+
+        jdbcTemplate.update("INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)",
+                filmId, user.getId());
+
+        jdbcTemplate.update("INSERT INTO reviews (content, is_positive, user_id, film_id, useful) " +
+                        "VALUES (?, ?, ?, ?, ?)",
+                "Great film", true, user.getId(), filmId, 0);
+
+        userDbService.deleteUser(user.getId());
+
+        assertThat(countUserLikes(user.getId()))
+                .as("Likes should be deleted")
+                .isZero();
+
+        assertThat(countUserReviews(user.getId()))
+                .as("Reviews should be deleted")
+                .isZero();
+    }
+
+
+
+    private int countUserFriendships(long userId) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM friendship WHERE user_id = ? OR friend_id = ?",
+                Integer.class,
+                userId, userId
+        );
+        return count == null ? 0 : count;
+    }
+
+    private int countUserLikes(long userId) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM film_likes WHERE user_id = ?",
+                Integer.class,
+                userId
+        );
+        return count == null ? 0 : count;
+    }
+
+    private int countUserReviews(long userId) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM reviews WHERE user_id = ?",
+                Integer.class,
+                userId);
+        return count == null ? count : 0;
+    }
+
 }

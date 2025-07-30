@@ -171,5 +171,7 @@ public class UserDbService {
         getUserOrThrow(friendId);
     }
 
-
+    public boolean userExists(long userId) {
+        return userRepository.getUser(userId).isPresent();
+    }
 }

@@ -31,7 +31,6 @@ public class FilmRowMapper implements RowMapper<Film> {
         return film;
     }
 
-    // Вспомогательный метод для проверки наличия столбца
     private boolean hasColumn(ResultSet rs, String columnName) {
         try {
             rs.findColumn(columnName);

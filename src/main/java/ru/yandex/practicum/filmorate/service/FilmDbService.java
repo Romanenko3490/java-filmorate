@@ -142,4 +142,8 @@ public class FilmDbService {
         }
 
     }
+
+    public boolean filmExists(long filmId) {
+        return filmRepository.getFilmById(filmId).isPresent();
+    }
 }

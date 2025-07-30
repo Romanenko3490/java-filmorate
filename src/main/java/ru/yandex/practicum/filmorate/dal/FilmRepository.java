@@ -27,9 +27,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     "FROM films f LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id";
 
     private static final String GET_FILM_BY_ID_QUERY = GET_ALL_FILMS_QUERY + " WHERE f.film_id = ?";
-    private static final String INSERT_FILM_QUERY =
-            "INSERT INTO films (name, description, release_date, duration, mpa_rating_id) " +
-                    "VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_FILM_QUERY =
             "UPDATE films SET name = ?, description = ?, release_date = ?, " +
                     "duration = ?, mpa_rating_id = ? WHERE film_id = ?";
@@ -57,11 +54,13 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     // region SQL Queries - Special Operations
     private static final String GET_POPULAR_FILMS_QUERY =
             "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
-                    "m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "m.mpa_id, m.mpa_name, m.description AS mpa_description, " +
+                    "COUNT(fl.user_id) AS likes_count " +
                     "FROM films f " +
                     "LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
-                    "WHERE EXISTS (SELECT 1 FROM film_likes WHERE film_id = f.film_id) " +
-                    "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) DESC " +
+                    "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
+                    "GROUP BY f.film_id, m.mpa_id " +
+                    "ORDER BY likes_count DESC, f.film_id " +
                     "LIMIT ?";
     private static final String CHECK_MPA_EXISTS_QUERY =
             "SELECT COUNT(*) FROM mpa_rating WHERE mpa_id = ?";

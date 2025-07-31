@@ -1,19 +1,21 @@
 package ru.yandex.practicum.filmorate.service;
 
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
+import ru.yandex.practicum.filmorate.enums.OrderBy;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FIlmMapper;
+import ru.yandex.practicum.filmorate.model.film.Director;
 import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.model.film.Genre;
-
 
 import java.util.Collection;
 import java.util.List;
@@ -23,23 +25,13 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @Primary
+@RequiredArgsConstructor
 public class FilmDbService {
     private final UserRepository userRepository;
     private final FilmRepository filmRepository;
     private final MpaRepository mpaRepository;
     private final GenreRepository genreRepository;
-
-    @Autowired
-    public FilmDbService(
-            UserRepository userRepository,
-            FilmRepository filmRepository,
-            MpaRepository mpaRepository,
-            GenreRepository genreRepository) {
-        this.userRepository = userRepository;
-        this.filmRepository = filmRepository;
-        this.mpaRepository = mpaRepository;
-        this.genreRepository = genreRepository;
-    }
+    private final DirectorRepository directorRepository;
 
 
     public Collection<FilmDto> getAllFilms() {
@@ -62,13 +54,13 @@ public class FilmDbService {
         }
 
         if (request.getGenres() != null && !request.getGenres().isEmpty()) {
-            Set<Integer> genreIds = request.getGenres().stream()
+            Set<Long> genreIds = request.getGenres().stream()
                     .map(Genre::getId)
                     .collect(Collectors.toSet());
 
-            Set<Integer> existingGenreIds = genreRepository.findAllExistingIds(genreIds);
+            Set<Long> existingGenreIds = genreRepository.findAllExistingIds(genreIds);
 
-            Set<Integer> missingGenreIds = genreIds.stream()
+            Set<Long> missingGenreIds = genreIds.stream()
                     .filter(id -> !existingGenreIds.contains(id))
                     .collect(Collectors.toSet());
 
@@ -76,6 +68,8 @@ public class FilmDbService {
                 throw new NotFoundException("Genres with ids " + missingGenreIds + " not found");
             }
         }
+
+        validateDirectors(request.getDirectors());
 
         Film film = FIlmMapper.mapToFilm(request);
         filmRepository.addFilm(film);
@@ -92,6 +86,7 @@ public class FilmDbService {
         if (request.getDuration() != null) film.setDuration(request.getDuration());
         if (request.getMpa() != null) film.setMpa(request.getMpa());
         if (request.getGenres() != null) film.setGenres(request.getGenres());
+        if (request.getDirectors() != null) film.setDirectors(request.getDirectors());
 
         filmRepository.updateFilm(film);
         return FIlmMapper.mapToFilmDto(film);
@@ -146,4 +141,30 @@ public class FilmDbService {
     public boolean filmExists(long filmId) {
         return filmRepository.getFilmById(filmId).isPresent();
     }
+
+    private void validateDirectors(Set<Director> directors) {
+        if (directors != null && !directors.isEmpty()) {
+            directors.forEach(director -> {
+                if (director.getId() == null) {
+                    throw new ValidationException("Director id is null");
+                }
+            });
+
+            Set<Long> directorsIds = directors.stream()
+                    .map(Director::getId)
+                    .collect(Collectors.toSet());
+
+            if (!directorRepository.existAllByIds(directorsIds)) {
+                throw new NotFoundException("One or more directors not found");
+            }
+        }
+    }
+
+    public List<FilmDto> getFilmsByDirector(long directorId, String sortBy) {
+        List<Film> films = filmRepository.getFilmsByDirector(directorId, OrderBy.fromParam(sortBy).getColumn());
+        return films.stream()
+                .map(FIlmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
+    }
+
 }

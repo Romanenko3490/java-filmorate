@@ -22,3 +22,5 @@ MERGE  INTO users (user_id, email, login, name, birthday)
 VALUES
     (1, 'user1@example.com', 'login1', 'User One', '1990-01-01'),
     (2, 'user2@example.com', 'login2', 'User Two', '1995-01-01');
+
+ALTER TABLE users ALTER COLUMN user_id RESTART WITH 3;

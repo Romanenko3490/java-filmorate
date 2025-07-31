@@ -13,6 +13,6 @@ public interface GenreRepository {
 
     List<Genre> findAll();
 
-    Set<Integer> findAllExistingIds(Set<Integer> ids);
+    Set<Long> findAllExistingIds(Set<Long> ids);
 
 }

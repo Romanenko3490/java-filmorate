@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.model.film.Director;
 import ru.yandex.practicum.filmorate.model.film.Genre;
 import ru.yandex.practicum.filmorate.model.film.MpaRating;
 
@@ -26,6 +27,8 @@ public class NewFilmRequest {
     private Set<Genre> genres;
 
     private MpaRating mpa;
+
+    private Set<Director> directors;
 
     @AssertTrue(message = "Release date must be on or after 1895-12-28")
     public boolean hasReleaseDate() {

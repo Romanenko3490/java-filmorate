@@ -71,6 +71,11 @@ public class ReviewService {
 
         return reviews.stream().map(ReviewMapper::mapToReviewDto).collect(Collectors.toList());
     }
+
+    public long getReviewAuthorId(long reviewId) {
+        return reviewRepository.findAuthorIdByReviewId(reviewId)
+                .orElseThrow(() -> new NotFoundException("Review not found with id: " + reviewId));
+    }
     //end
 
 

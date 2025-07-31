@@ -6,10 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 public class Genre {
-    private int id;
+    private long id;
     private String name;
 
-    public Genre(int id, String name) {
+    public Genre(long id, String name) {
         this.id = id;
         this.name = name;
     }

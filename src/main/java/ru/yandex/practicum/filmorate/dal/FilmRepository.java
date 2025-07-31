@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.film.Director;
 import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.model.film.Genre;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -44,6 +45,11 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     "WHERE fg.film_id = ? ORDER BY g.genre_id";
     // endregion
 
+    private static final String INSERT_FILM_DIRECTOR_QUERY =
+            "INSERT INTO film_directors (film_id, id) VALUES (?, ?)";
+    private static final String DELETE_FILM_DIRECTOR_QUERY =
+            "DELETE FROM film_directors WHERE film_id = ?";
+
     // region SQL Queries - Likes
     private static final String INSERT_FILM_LIKE_QUERY =
             "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
@@ -62,7 +68,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     "GROUP BY f.film_id, m.mpa_id " +
                     "ORDER BY likes_count DESC, f.film_id " +
                     "LIMIT ?";
-
     private static final String CHECK_MPA_EXISTS_QUERY =
             "SELECT COUNT(*) FROM mpa_rating WHERE mpa_id = ?";
 
@@ -98,6 +103,23 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     // endregion
 
+    private static final String GET_FILM_DIRECTORS_QUERY =
+            "SELECT d.id, d.name FROM film_directors fd " +
+                    "JOIN directors d ON fd.id = d.id " +
+                    "WHERE fd.film_id = ? ORDER BY d.id";
+
+    private static final String GET_FILMS_BY_DIRECTOR_QUERY =
+            "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
+                    "m.mpa_id, m.mpa_name, m.description AS mpa_description, " +
+                    "COUNT(fl.user_id) AS likes_count " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
+                    "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
+                    "JOIN film_directors fd ON f.film_id = fd.film_id " +
+                    "WHERE fd.id = ? " +
+                    "GROUP BY f.film_id, m.mpa_id " +
+                    "ORDER BY %s";
+
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
     }
@@ -107,6 +129,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     public Collection<Film> getFilms() {
         List<Film> films = jdbc.query(GET_ALL_FILMS_QUERY, mapper);
         loadGenresForFilms(films);
+        loadDirectorsForFilms(films);
         return films;
     }
 
@@ -116,6 +139,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             Film film = jdbc.queryForObject(GET_FILM_BY_ID_QUERY, mapper, id);
             if (film != null) {
                 loadGenresForFilm(film);
+                loadDirectorsForFilm(film);
             }
             return Optional.ofNullable(film);
         } catch (Exception e) {
@@ -140,6 +164,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         long filmId = simpleJdbcInsert.executeAndReturnKey(parameters).longValue();
         film.setId(filmId);
         updateFilmGenres(film);
+        updateFilmDirector(film);
         return film;
     }
 
@@ -164,6 +189,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         }
 
         updateFilmGenres(film);
+        updateFilmDirector(film);
         return film;
     }
 
@@ -211,6 +237,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             log.debug("Executing popular films query with limit: {}", limit);
             List<Film> films = jdbc.query(GET_POPULAR_FILMS_QUERY, mapper, limit);
             loadGenresForFilms(films);
+            loadDirectorsForFilms(films);
             return films;
         }
     }
@@ -247,6 +274,18 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     .collect(Collectors.toList());
 
             jdbc.batchUpdate(INSERT_FILM_GENRE_QUERY, batchArgs);
+        }
+    }
+
+    private void updateFilmDirector(Film film) {
+        jdbc.update(DELETE_FILM_DIRECTOR_QUERY, film.getId());
+
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            List<Object[]> batchArgs = film.getDirectors().stream()
+                    .map(director -> new Object[]{film.getId(), director.getId()})
+                    .collect(Collectors.toList());
+
+            jdbc.batchUpdate(INSERT_FILM_DIRECTOR_QUERY, batchArgs);
         }
     }
 
@@ -293,5 +332,48 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     }
     // endregion
 
+    private void loadDirectorsForFilm(Film film) {
+        List<Director> directors = jdbc.query(GET_FILM_DIRECTORS_QUERY, (rs, rowNum) -> {
+            return new Director(rs.getLong("id"), rs.getString("name"));
+        }, film.getId());
+        film.setDirectors(new HashSet<>(directors));
+    }
+
+    private void loadDirectorsForFilms(Collection<Film> films) {
+        Map<Long, Film> filmMap = new HashMap<>();
+        films.forEach(film -> filmMap.put(film.getId(), film));
+
+        if (filmMap.isEmpty()) {
+            return;
+        }
+
+        String inClause = String.join(",", Collections.nCopies(filmMap.size(), "?"));
+        String query = "SELECT fd.film_id, d.id, d.name FROM film_directors fd " +
+                "JOIN directors d ON fd.id = d.id " +
+                "WHERE fd.film_id IN (" + inClause + ") ORDER BY d.id";
+
+        jdbc.query(query, rs -> {
+            long filmId = rs.getLong("film_id");
+            Film film = filmMap.get(filmId);
+            if (film != null) {
+                film.getDirectors().add(new Director(rs.getLong("id"), rs.getString("name")));
+            }
+        }, filmMap.keySet().toArray());
+    }
+
+    public List<Film> getFilmsByDirector(long directorId, String sortBy) {
+        List<Film> films = jdbc.query(GET_FILMS_BY_DIRECTOR_QUERY.formatted(sortBy), (rs, rowNum) -> {
+            Film film = new Film();
+            film.setId(rs.getLong("film_id"));
+            film.setName(rs.getString("name"));
+            film.setDescription(rs.getString("description"));
+            film.setReleaseDate(rs.getDate("release_date").toLocalDate());
+            film.setDuration(rs.getInt("duration"));
+            return film;
+        }, directorId);
+        loadGenresForFilms(films);
+        loadDirectorsForFilms(films);
+        return films;
+    }
 
 }

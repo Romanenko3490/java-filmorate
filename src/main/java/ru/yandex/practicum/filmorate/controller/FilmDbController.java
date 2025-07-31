@@ -2,14 +2,15 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
+import ru.yandex.practicum.filmorate.service.FeedService;
 import ru.yandex.practicum.filmorate.service.FilmDbService;
 
 import java.time.LocalDate;
@@ -19,15 +20,12 @@ import java.util.List;
 @Slf4j
 @RestController
 @Validated
+@RequiredArgsConstructor
 @RequestMapping("/films")
 public class FilmDbController {
 
     private final FilmDbService filmDbService;
-
-    @Autowired
-    public FilmDbController(FilmDbService filmDbService) {
-        this.filmDbService = filmDbService;
-    }
+    private final FeedService feedService;
 
     @GetMapping
     public Collection<FilmDto> getFilms() {
@@ -70,13 +68,15 @@ public class FilmDbController {
     @PutMapping("/{filmId}/like/{userId}")
     public FilmDto likeFilm(@PathVariable long filmId,
                             @PathVariable long userId) {
+        feedService.addFilmLikeEvent(userId, filmId);
         return filmDbService.addLike(filmId, userId);
     }
 
-    @DeleteMapping("/{id}/like/{userId}")
-    public FilmDto deleteLike(@PathVariable long id,
+    @DeleteMapping("/{filmId}/like/{userId}")
+    public FilmDto deleteLike(@PathVariable long filmId,
                               @PathVariable long userId) {
-        return filmDbService.removeLike(id, userId);
+        feedService.removeFilmLikeEvent(userId, filmId);
+        return filmDbService.removeLike(filmId, userId);
     }
 
     @DeleteMapping("/{filmId}")
@@ -84,4 +84,10 @@ public class FilmDbController {
     public void deleteFilm(@PathVariable long filmId) {
         filmDbService.removeFilm(filmId);
     }
+
+    @GetMapping("/director/{directorId}")
+    public Collection<FilmDto> getFilmsByDirectorId(@PathVariable int directorId, @RequestParam(required = false, defaultValue = "year") String sortBy) {
+        return filmDbService.getFilmsByDirector(directorId, sortBy);
+    }
+
 }

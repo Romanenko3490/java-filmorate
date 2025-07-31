@@ -82,4 +82,10 @@ public class FilmDbController {
     public void deleteFilm(@PathVariable long filmId) {
         filmDbService.removeFilm(filmId);
     }
+
+    @GetMapping("/director/{directorId}")
+    public Collection<FilmDto> getFilmsByDirectorId(@PathVariable int directorId, @RequestParam(required = false, defaultValue = "year") String sortBy) {
+        return filmDbService.getFilmsByDirector(directorId, sortBy);
+    }
+
 }

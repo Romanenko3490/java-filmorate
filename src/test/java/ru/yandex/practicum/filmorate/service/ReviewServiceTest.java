@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.dal.*;
+import ru.yandex.practicum.filmorate.dal.mappers.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.ReviewRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
@@ -37,9 +38,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         FilmRepository.class,
         FriendshipRepository.class,
         GenreRepositoryImpl.class,
+        DirectorRepositoryImpl.class,
         ReviewRowMapper.class,
         UserRowMapper.class,
-        FilmRowMapper.class
+        FilmRowMapper.class,
+        DirectorRowMapper.class
 })
 @Sql(scripts = {"/schema.sql", "/test-data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class ReviewServiceTest {

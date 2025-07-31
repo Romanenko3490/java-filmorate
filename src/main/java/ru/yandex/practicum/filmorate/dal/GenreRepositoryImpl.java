@@ -6,7 +6,9 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.film.Genre;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Repository
@@ -49,7 +51,7 @@ public class GenreRepositoryImpl extends BaseRepository<Genre> implements GenreR
 
     @Override
     public Set<Integer> findAllExistingIds(Set<Integer> ids) {
-        return super.findAllExistingIds(FIND_EXISTING_IDS_BASE_QUERY, ids);
+        return super.findAllExistingIds(FIND_EXISTING_IDS_BASE_QUERY, ids, Integer.class);
     }
 
 }

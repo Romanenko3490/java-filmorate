@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.service;
 
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
@@ -10,11 +12,13 @@ import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FIlmMapper;
+import ru.yandex.practicum.filmorate.model.film.Director;
 import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.model.film.Genre;
 
-
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -28,17 +32,20 @@ public class FilmDbService {
     private final FilmRepository filmRepository;
     private final MpaRepository mpaRepository;
     private final GenreRepository genreRepository;
+    private final DirectorRepository directorRepository;
 
     @Autowired
     public FilmDbService(
             UserRepository userRepository,
             FilmRepository filmRepository,
             MpaRepository mpaRepository,
-            GenreRepository genreRepository) {
+            GenreRepository genreRepository,
+            DirectorRepository directorRepository) {
         this.userRepository = userRepository;
         this.filmRepository = filmRepository;
         this.mpaRepository = mpaRepository;
         this.genreRepository = genreRepository;
+        this.directorRepository = directorRepository;
     }
 
 
@@ -77,6 +84,8 @@ public class FilmDbService {
             }
         }
 
+        validateDirectors(request.getDirector());
+
         Film film = FIlmMapper.mapToFilm(request);
         filmRepository.addFilm(film);
         return FIlmMapper.mapToFilmDto(film);
@@ -92,6 +101,7 @@ public class FilmDbService {
         if (request.getDuration() != null) film.setDuration(request.getDuration());
         if (request.getMpa() != null) film.setMpa(request.getMpa());
         if (request.getGenres() != null) film.setGenres(request.getGenres());
+        if (request.getDirector() != null) film.setDirector(request.getDirector());
 
         filmRepository.updateFilm(film);
         return FIlmMapper.mapToFilmDto(film);
@@ -145,5 +155,48 @@ public class FilmDbService {
 
     public boolean filmExists(long filmId) {
         return filmRepository.getFilmById(filmId).isPresent();
+    }
+
+    private void validateDirectors(Set<Director> directors) {
+        if (directors != null && !directors.isEmpty()) {
+            directors.forEach(director -> {
+                if (director.getDirectorId() == null) {
+                    throw new ValidationException("Director id is null");
+                }
+            });
+
+            Set<Long> directorsIds = directors.stream()
+                    .map(Director::getDirectorId)
+                    .collect(Collectors.toSet());
+
+            if (!directorRepository.existAllByIds(directorsIds)) {
+                throw new NotFoundException("One or more directors not found");
+            }
+        }
+    }
+
+    public List<FilmDto> getFilmsByDirector(long directorId, String sortBy) {
+        List<Film> films = filmRepository.getFilmsByDirector(directorId, ORDER_BY.fromParam(sortBy).getColumn());
+        return films.stream()
+                .map(FIlmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
+    }
+
+}
+
+@Getter
+@RequiredArgsConstructor
+enum ORDER_BY {
+    YEAR("year", "release_date"),
+    LIKES("likes", "likes_count");
+
+    private final String param;
+    private final String column;
+
+    public static ORDER_BY fromParam(String param) {
+        return Arrays.stream(ORDER_BY.values())
+                .filter(orderBy -> orderBy.getParam().equals(param))
+                .findFirst()
+                .orElseThrow(() -> new ValidationException("Invalid order by parameter: " + param));
     }
 }

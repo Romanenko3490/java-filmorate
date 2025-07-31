@@ -20,7 +20,7 @@ public class FeedRepositoryImpl implements FeedRepository {
     private final RowMapper<FeedEvent> mapper;
     private static final String GET_FEED_QUERY =
             "SELECT event_id, user_id, event_type, operation, entity_id, timestamp " +
-                    "FROM feed WHERE user_id = ? ORDER BY timestamp DESC";
+                    "FROM feed WHERE user_id = ? ORDER BY timestamp ASC";
 
 
     @Override

@@ -198,12 +198,12 @@ class FeedServiceTest {
                 .satisfiesExactly(
                         addEvent -> {
                             assertThat(addEvent.getEventType()).isEqualTo(FeedEvent.EventType.FRIEND);
-                            assertThat(addEvent.getOperation()).isEqualTo(FeedEvent.Operation.REMOVE);
+                            assertThat(addEvent.getOperation()).isEqualTo(FeedEvent.Operation.ADD);
                             assertThat(addEvent.getEntityId()).isEqualTo(EXISTING_USER_ID_2);
                         },
                         removeEvent -> {
                             assertThat(removeEvent.getEventType()).isEqualTo(FeedEvent.EventType.FRIEND);
-                            assertThat(removeEvent.getOperation()).isEqualTo(FeedEvent.Operation.ADD);
+                            assertThat(removeEvent.getOperation()).isEqualTo(FeedEvent.Operation.REMOVE);
                             assertThat(removeEvent.getEntityId()).isEqualTo(EXISTING_USER_ID_2);
                         }
                 );
@@ -263,11 +263,11 @@ class FeedServiceTest {
                 .satisfiesExactly(
                         addEvent -> {
                             assertThat(addEvent.getEventType()).isEqualTo(FeedEvent.EventType.LIKE);
-                            assertThat(addEvent.getOperation()).isEqualTo(FeedEvent.Operation.REMOVE);
+                            assertThat(addEvent.getOperation()).isEqualTo(FeedEvent.Operation.ADD);
                         },
                         removeEvent -> {
                             assertThat(removeEvent.getEventType()).isEqualTo(FeedEvent.EventType.LIKE);
-                            assertThat(removeEvent.getOperation()).isEqualTo(FeedEvent.Operation.ADD);
+                            assertThat(removeEvent.getOperation()).isEqualTo(FeedEvent.Operation.REMOVE);
                         }
                 );
     }
@@ -320,7 +320,7 @@ class FeedServiceTest {
         List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
         assertThat(feed)
                 .hasSize(2)
-                .isSortedAccordingTo(Comparator.comparing(FeedEventDto::getTimestamp).reversed());
+                .isSortedAccordingTo(Comparator.comparing(FeedEventDto::getTimestamp));
     }
 
     @Test

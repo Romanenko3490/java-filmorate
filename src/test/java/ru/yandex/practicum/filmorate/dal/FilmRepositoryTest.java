@@ -118,12 +118,12 @@ class FilmRepositoryTest {
         Optional<Film> filmWithLike = filmRepository.getFilmById(addedFilm.getId());
         assertThat(filmWithLike).isPresent();
 
-        List<Film> popularFilms = filmRepository.getPopularFilms(10);
+        List<Film> popularFilms = filmRepository.getPopularFilms(10, null, null);
         assertThat(popularFilms).extracting(Film::getId).contains(addedFilm.getId());
 
         filmRepository.removeLike(addedFilm.getId(), 1L);
 
-        List<Film> filmsAfterRemove = filmRepository.getPopularFilms(10);
+        List<Film> filmsAfterRemove = filmRepository.getPopularFilms(10, null, null);
         assertThat(filmsAfterRemove).extracting(Film::getId).doesNotContain(addedFilm.getId());
     }
 
@@ -145,7 +145,7 @@ class FilmRepositoryTest {
         filmRepository.addLike(film2.getId(), 1L);
         filmRepository.addLike(film2.getId(), 2L);
 
-        List<Film> popularFilms = filmRepository.getPopularFilms(2);
+        List<Film> popularFilms = filmRepository.getPopularFilms(2, null, null);
 
         assertThat(popularFilms).hasSize(2);
         assertThat(popularFilms.get(0).getId()).isEqualTo(film2.getId());

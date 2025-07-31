@@ -162,7 +162,7 @@ class FilmDbServiceTest {
         filmDbService.addLike(film2.getId(), 1L);
         filmDbService.addLike(film2.getId(), 2L);
 
-        List<FilmDto> popularFilms = filmDbService.getMostPopularFilms(2);
+        List<FilmDto> popularFilms = filmDbService.getMostPopularFilms(2, null, null);
 
         assertThat(popularFilms).hasSize(2);
         assertThat(popularFilms.get(0).getId()).isEqualTo(film2.getId());

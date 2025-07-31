@@ -46,7 +46,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     // endregion
 
     private static final String INSERT_FILM_DIRECTOR_QUERY =
-            "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)";
+            "INSERT INTO film_directors (film_id, id) VALUES (?, ?)";
     private static final String DELETE_FILM_DIRECTOR_QUERY =
             "DELETE FROM film_directors WHERE film_id = ?";
 
@@ -73,9 +73,9 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     // endregion
 
     private static final String GET_FILM_DIRECTORS_QUERY =
-            "SELECT d.director_id, d.name FROM film_directors fd " +
-                    "JOIN directors d ON fd.director_id = d.director_id " +
-                    "WHERE fd.film_id = ? ORDER BY d.director_id";
+            "SELECT d.id, d.name FROM film_directors fd " +
+                    "JOIN directors d ON fd.id = d.id " +
+                    "WHERE fd.film_id = ? ORDER BY d.id";
 
     private static final String GET_FILMS_BY_DIRECTOR_QUERY =
             "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
@@ -85,7 +85,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     "LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
                     "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
                     "JOIN film_directors fd ON f.film_id = fd.film_id " +
-                    "WHERE fd.director_id = ? " +
+                    "WHERE fd.id = ? " +
                     "GROUP BY f.film_id, m.mpa_id " +
                     "ORDER BY %s DESC ";
 
@@ -235,7 +235,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
         if (film.getDirector() != null && !film.getDirector().isEmpty()) {
             List<Object[]> batchArgs = film.getDirector().stream()
-                    .map(director -> new Object[]{film.getId(), director.getDirectorId()})
+                    .map(director -> new Object[]{film.getId(), director.getId()})
                     .collect(Collectors.toList());
 
             jdbc.batchUpdate(INSERT_FILM_DIRECTOR_QUERY, batchArgs);
@@ -287,7 +287,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     private void loadDirectorsForFilm(Film film) {
         List<Director> directors = jdbc.query(GET_FILM_DIRECTORS_QUERY, (rs, rowNum) -> {
-            return new Director(rs.getLong("director_id"), rs.getString("name"));
+            return new Director(rs.getLong("id"), rs.getString("name"));
         }, film.getId());
         film.setDirector(new HashSet<>(directors));
     }
@@ -301,15 +301,15 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         }
 
         String inClause = String.join(",", Collections.nCopies(filmMap.size(), "?"));
-        String query = "SELECT fd.film_id, d.director_id, d.name FROM film_directors fd " +
-                "JOIN directors d ON fd.director_id = d.director_id " +
-                "WHERE fd.film_id IN (" + inClause + ") ORDER BY d.director_id";
+        String query = "SELECT fd.film_id, d.id, d.name FROM film_directors fd " +
+                "JOIN directors d ON fd.id = d.id " +
+                "WHERE fd.film_id IN (" + inClause + ") ORDER BY d.id";
 
         jdbc.query(query, rs -> {
             long filmId = rs.getLong("film_id");
             Film film = filmMap.get(filmId);
             if (film != null) {
-                film.getDirector().add(new Director(rs.getLong("director_id"), rs.getString("name")));
+                film.getDirector().add(new Director(rs.getLong("id"), rs.getString("name")));
             }
         }, filmMap.keySet().toArray());
     }

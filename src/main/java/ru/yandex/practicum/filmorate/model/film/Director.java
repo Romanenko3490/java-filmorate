@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Director {
-    private Long directorId;
+    private Long id;
     private String name;
 }

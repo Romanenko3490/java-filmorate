@@ -34,7 +34,7 @@ public class DirectorService {
     }
 
     public DirectorDto update(Director director) {
-        validateAndReturn(director.getDirectorId());
+        validateAndReturn(director.getId());
         return DirectorMapper.mapToDirectorDto(directorRepository.update(director));
     }
 

@@ -48,9 +48,9 @@ class DirectorServiceTest {
     @Test
     void shouldFindDirectorById() {
         DirectorDto createdDirector = directorService.add(director1);
-        DirectorDto foundDirector = directorService.findById(createdDirector.getDirectorId());
+        DirectorDto foundDirector = directorService.findById(createdDirector.getId());
 
-        assertThat(foundDirector.getDirectorId()).isEqualTo(createdDirector.getDirectorId());
+        assertThat(foundDirector.getId()).isEqualTo(createdDirector.getId());
         assertThat(foundDirector.getName()).isEqualTo("Director One");
     }
 
@@ -76,10 +76,10 @@ class DirectorServiceTest {
     void shouldAddDirector() {
         DirectorDto addedDirector = directorService.add(director1);
 
-        assertThat(addedDirector.getDirectorId()).isPositive();
+        assertThat(addedDirector.getId()).isPositive();
         assertThat(addedDirector.getName()).isEqualTo("Director One");
 
-        DirectorDto foundDirector = directorService.findById(addedDirector.getDirectorId());
+        DirectorDto foundDirector = directorService.findById(addedDirector.getId());
         assertThat(foundDirector).isEqualTo(addedDirector);
     }
 
@@ -88,22 +88,22 @@ class DirectorServiceTest {
         DirectorDto addedDirector = directorService.add(director1);
 
         Director updatedDirector = new Director();
-        updatedDirector.setDirectorId(addedDirector.getDirectorId());
+        updatedDirector.setId(addedDirector.getId());
         updatedDirector.setName("Updated Director Name");
 
         DirectorDto updatedDirectorDto = directorService.update(updatedDirector);
 
-        assertThat(updatedDirectorDto.getDirectorId()).isEqualTo(addedDirector.getDirectorId());
+        assertThat(updatedDirectorDto.getId()).isEqualTo(addedDirector.getId());
         assertThat(updatedDirectorDto.getName()).isEqualTo("Updated Director Name");
 
-        DirectorDto foundDirector = directorService.findById(addedDirector.getDirectorId());
+        DirectorDto foundDirector = directorService.findById(addedDirector.getId());
         assertThat(foundDirector.getName()).isEqualTo("Updated Director Name");
     }
 
     @Test
     void shouldThrowWhenUpdateNonExistentDirector() {
         Director nonExistentDirector = new Director();
-        nonExistentDirector.setDirectorId(999L);
+        nonExistentDirector.setId(999L);
         nonExistentDirector.setName("Non-existent");
 
         assertThrows(NotFoundException.class,
@@ -113,10 +113,10 @@ class DirectorServiceTest {
     @Test
     void shouldDeleteDirector() {
         DirectorDto addedDirector = directorService.add(director1);
-        directorService.delete(addedDirector.getDirectorId());
+        directorService.delete(addedDirector.getId());
 
         assertThrows(NotFoundException.class,
-                () -> directorService.findById(addedDirector.getDirectorId()));
+                () -> directorService.findById(addedDirector.getId()));
     }
 
     @Test

@@ -158,13 +158,13 @@ public class FilmDbService {
     private void validateDirectors(Set<Director> directors) {
         if (directors != null && !directors.isEmpty()) {
             directors.forEach(director -> {
-                if (director.getDirectorId() == null) {
+                if (director.getId() == null) {
                     throw new ValidationException("Director id is null");
                 }
             });
 
             Set<Long> directorsIds = directors.stream()
-                    .map(Director::getDirectorId)
+                    .map(Director::getId)
                     .collect(Collectors.toSet());
 
             if (!directorRepository.existAllByIds(directorsIds)) {

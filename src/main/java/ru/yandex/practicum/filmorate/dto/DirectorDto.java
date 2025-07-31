@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DirectorDto {
-    private Long directorId;
+    private Long id;
     private String name;
 }

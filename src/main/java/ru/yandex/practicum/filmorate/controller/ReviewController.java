@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.NewReviewRequest;
 import ru.yandex.practicum.filmorate.dto.ReviewDto;
 import ru.yandex.practicum.filmorate.dto.UpdateReviewRequest;
+import ru.yandex.practicum.filmorate.service.FeedService;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReviewController {
     private final ReviewService reviewService;
+    private final FeedService feedService;
 
 
     @PostMapping
@@ -50,6 +52,7 @@ public class ReviewController {
     @PutMapping("/{reviewId}/like/{userId}")
     public void addLike(@PathVariable Long reviewId, @PathVariable Long userId) {
         reviewService.addLike(reviewId, userId);
+        feedService.addReviewEvent(userId, reviewId);
     }
 
     @PutMapping("/{reviewId}/dislike/{userId}")
@@ -60,6 +63,7 @@ public class ReviewController {
     @DeleteMapping("/{reviewId}/like/{userId}")
     public void deleteLike(@PathVariable Long reviewId, @PathVariable Long userId) {
         reviewService.removeLike(reviewId, userId);
+        feedService.removeReviewEvent(userId, reviewId);
     }
 
     @DeleteMapping("/{reviewId}/dislike/{userId}")

@@ -14,6 +14,7 @@ import ru.yandex.practicum.filmorate.dal.mappers.FeedEventRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.ReviewRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
+import ru.yandex.practicum.filmorate.dto.FeedEventDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.NewReviewRequest;
 import ru.yandex.practicum.filmorate.dto.ReviewDto;
@@ -123,7 +124,7 @@ class FeedServiceTest {
     @Test
     void getFeedByUserId_shouldReturnEmptyListForUserWithoutEvents() {
         printFeedTableContent();
-        List<FeedEvent> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
+        List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
         assertThat(feed).isEmpty();
     }
 
@@ -149,7 +150,7 @@ class FeedServiceTest {
         assertThat(dbCount).isEqualTo(1);
 
         // 4. Проверяем через сервис
-        List<FeedEvent> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
+        List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
         log.info("Feed from service: {}", feed);
 
         assertThat(feed)
@@ -191,7 +192,7 @@ class FeedServiceTest {
         assertThat(totalCount).isEqualTo(2);
 
         // 5. Проверяем через сервис
-        List<FeedEvent> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
+        List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
         assertThat(feed)
                 .hasSize(2)
                 .satisfiesExactly(
@@ -224,7 +225,7 @@ class FeedServiceTest {
         assertThat(dbCount).isEqualTo(1);
 
         // 3. Проверяем через сервис
-        List<FeedEvent> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
+        List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
         assertThat(feed)
                 .hasSize(1)
                 .first()
@@ -255,7 +256,7 @@ class FeedServiceTest {
         assertThat(dbCount).isEqualTo(2);
 
         // 4. Проверяем через сервис
-        List<FeedEvent> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
+        List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
         assertThat(feed)
                 .hasSize(2)
                 .satisfiesExactly(
@@ -292,7 +293,7 @@ class FeedServiceTest {
         assertThat(dbCount).isEqualTo(1);
 
         // 3. Проверяем через сервис
-        List<FeedEvent> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
+        List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
         assertThat(feed)
                 .hasSize(1)
                 .first()
@@ -315,10 +316,10 @@ class FeedServiceTest {
         printFeedTableContent();
 
         // 2. Проверяем порядок
-        List<FeedEvent> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
+        List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
         assertThat(feed)
                 .hasSize(2)
-                .isSortedAccordingTo(Comparator.comparing(FeedEvent::getTimestamp).reversed());
+                .isSortedAccordingTo(Comparator.comparing(FeedEventDto::getTimestamp).reversed());
     }
 
     @Test

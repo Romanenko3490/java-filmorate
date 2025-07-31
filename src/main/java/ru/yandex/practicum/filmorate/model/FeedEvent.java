@@ -23,4 +23,5 @@ public class FeedEvent {
     public enum Operation {
         ADD, REMOVE, UPDATE
     }
+
 }

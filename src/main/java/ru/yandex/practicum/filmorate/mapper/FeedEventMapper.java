@@ -10,7 +10,7 @@ import java.time.Instant;
 public class FeedEventMapper {
     public FeedEvent toFeedEvent(FeedEventDto dto) {
         return new FeedEvent(
-                null,
+                dto.getEventId(),
                 dto.getUserId(),
                 dto.getEventType(),
                 dto.getOperation(),

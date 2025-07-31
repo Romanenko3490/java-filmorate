@@ -15,7 +15,17 @@ public class FeedEventMapper {
                 dto.getEventType(),
                 dto.getOperation(),
                 dto.getEntityId(),
-                Instant.now()
+                Instant.ofEpochMilli(dto.getTimestamp())
+        );
+    }
+
+    public FeedEventDto toDto(FeedEvent event) {
+        return new FeedEventDto(
+                event.getUserId(),
+                event.getEventType(),
+                event.getOperation(),
+                event.getEntityId(),
+                event.getTimestamp().toEpochMilli()
         );
     }
 }

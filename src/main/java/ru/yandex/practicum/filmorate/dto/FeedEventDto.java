@@ -11,4 +11,5 @@ public class FeedEventDto {
     private FeedEvent.EventType eventType;
     private FeedEvent.Operation operation;
     private Long entityId;
+    private long timestamp;
 }

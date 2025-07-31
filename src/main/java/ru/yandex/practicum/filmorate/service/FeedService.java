@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.FeedEventMapper;
 import ru.yandex.practicum.filmorate.model.FeedEvent;
 
+import java.time.Instant;
 import java.util.List;
 
 @Slf4j
@@ -22,12 +23,14 @@ public class FeedService {
     private final ReviewService reviewService;
 
 
-    public List<FeedEvent> getFeedByUserId(Long userId) {
+    public List<FeedEventDto> getFeedByUserId(Long userId) {
         if (!userDbService.userExists(userId)) {
             log.info("User does not exist with id {}", userId);
             throw new NotFoundException("User does not exist with id " + userId);
         }
-        return feedRepository.getFeedByUserId(userId);
+        return feedRepository.getFeedByUserId(userId).stream()
+                .map(mapper::toDto)
+                .toList();
     }
 
 
@@ -37,43 +40,44 @@ public class FeedService {
 
     // Friends events
     public void addFriendEvent(long userId, long friendId) {
-        addEvent(new FeedEventDto(userId, FeedEvent.EventType.FRIEND, FeedEvent.Operation.ADD, friendId));
+
+        addEvent(new FeedEventDto(userId, FeedEvent.EventType.FRIEND, FeedEvent.Operation.ADD, friendId, Instant.now().toEpochMilli()));
     }
 
     public void removeFriendEvent(long userId, long friendId) {
-        addEvent(new FeedEventDto(userId, FeedEvent.EventType.FRIEND, FeedEvent.Operation.REMOVE, friendId));
+        addEvent(new FeedEventDto(userId, FeedEvent.EventType.FRIEND, FeedEvent.Operation.REMOVE, friendId, Instant.now().toEpochMilli()));
     }
 
     // Film likes events
     public void addFilmLikeEvent(long userId, long filmId) {
-        addEvent(new FeedEventDto(userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.ADD, filmId));
+        addEvent(new FeedEventDto(userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.ADD, filmId, Instant.now().toEpochMilli()));
     }
 
     public void removeFilmLikeEvent(long userId, long filmId) {
-        addEvent(new FeedEventDto(userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.REMOVE, filmId));
+        addEvent(new FeedEventDto(userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.REMOVE, filmId, Instant.now().toEpochMilli()));
     }
 
     // Review events (not review likes!)
     public void addReviewEvent(long userId, long reviewId) {
-        addEvent(new FeedEventDto(userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.ADD, reviewId));
+        addEvent(new FeedEventDto(userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.ADD, reviewId, Instant.now().toEpochMilli()));
     }
 
     public void updateReviewEvent(long reviewId) {
         Long userId = reviewService.getReviewAuthorId(reviewId);
-        addEvent(new FeedEventDto(userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.UPDATE, reviewId));
+        addEvent(new FeedEventDto(userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.UPDATE, reviewId, Instant.now().toEpochMilli()));
     }
 
     public void removeReviewEvent(long reviewId) {
         Long userId = reviewService.getReviewAuthorId(reviewId);
-        addEvent(new FeedEventDto(userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.REMOVE, reviewId));
+        addEvent(new FeedEventDto(userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.REMOVE, reviewId, Instant.now().toEpochMilli()));
     }
 
     // Review likes events (treated as LIKE type)
     public void addReviewLikeEvent(long userId, long reviewId) {
-        addEvent(new FeedEventDto(userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.ADD, reviewId));
+        addEvent(new FeedEventDto(userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.ADD, reviewId, Instant.now().toEpochMilli()));
     }
 
     public void removeReviewLikeEvent(long userId, long reviewId) {
-        addEvent(new FeedEventDto(userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.REMOVE, reviewId));
+        addEvent(new FeedEventDto(userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.REMOVE, reviewId, Instant.now().toEpochMilli()));
     }
 }

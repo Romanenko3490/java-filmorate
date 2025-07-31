@@ -21,6 +21,7 @@ public class FeedEventMapper {
 
     public FeedEventDto toDto(FeedEvent event) {
         return new FeedEventDto(
+                event.getEventId(),
                 event.getUserId(),
                 event.getEventType(),
                 event.getOperation(),

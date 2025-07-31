@@ -19,7 +19,7 @@ public class UpdateFilmRequest {
     private Integer duration;
     private Set<Genre> genres;
     private MpaRating mpa;
-    private Set<Director> director;
+    private Set<Director> directors;
 
     public boolean hasName() {
         return !(name == null || name.isBlank());

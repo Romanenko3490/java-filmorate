@@ -87,7 +87,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     "JOIN film_directors fd ON f.film_id = fd.film_id " +
                     "WHERE fd.id = ? " +
                     "GROUP BY f.film_id, m.mpa_id " +
-                    "ORDER BY %s DESC ";
+                    "ORDER BY %s";
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -233,8 +233,8 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private void updateFilmDirector(Film film) {
         jdbc.update(DELETE_FILM_DIRECTOR_QUERY, film.getId());
 
-        if (film.getDirector() != null && !film.getDirector().isEmpty()) {
-            List<Object[]> batchArgs = film.getDirector().stream()
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            List<Object[]> batchArgs = film.getDirectors().stream()
                     .map(director -> new Object[]{film.getId(), director.getId()})
                     .collect(Collectors.toList());
 
@@ -289,7 +289,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         List<Director> directors = jdbc.query(GET_FILM_DIRECTORS_QUERY, (rs, rowNum) -> {
             return new Director(rs.getLong("id"), rs.getString("name"));
         }, film.getId());
-        film.setDirector(new HashSet<>(directors));
+        film.setDirectors(new HashSet<>(directors));
     }
 
     private void loadDirectorsForFilms(Collection<Film> films) {
@@ -309,7 +309,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             long filmId = rs.getLong("film_id");
             Film film = filmMap.get(filmId);
             if (film != null) {
-                film.getDirector().add(new Director(rs.getLong("id"), rs.getString("name")));
+                film.getDirectors().add(new Director(rs.getLong("id"), rs.getString("name")));
             }
         }, filmMap.keySet().toArray());
     }

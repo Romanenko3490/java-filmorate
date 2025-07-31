@@ -82,7 +82,7 @@ public class FilmDbService {
             }
         }
 
-        validateDirectors(request.getDirector());
+        validateDirectors(request.getDirectors());
 
         Film film = FIlmMapper.mapToFilm(request);
         filmRepository.addFilm(film);
@@ -99,7 +99,7 @@ public class FilmDbService {
         if (request.getDuration() != null) film.setDuration(request.getDuration());
         if (request.getMpa() != null) film.setMpa(request.getMpa());
         if (request.getGenres() != null) film.setGenres(request.getGenres());
-        if (request.getDirector() != null) film.setDirector(request.getDirector());
+        if (request.getDirectors() != null) film.setDirectors(request.getDirectors());
 
         filmRepository.updateFilm(film);
         return FIlmMapper.mapToFilmDto(film);

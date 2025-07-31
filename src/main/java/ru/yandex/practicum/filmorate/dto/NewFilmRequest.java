@@ -28,7 +28,7 @@ public class NewFilmRequest {
 
     private MpaRating mpa;
 
-    private Set<Director> director;
+    private Set<Director> directors;
 
     @AssertTrue(message = "Release date must be on or after 1895-12-28")
     public boolean hasReleaseDate() {

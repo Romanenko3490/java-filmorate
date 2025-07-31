@@ -45,7 +45,7 @@ public class DirectorService {
 
     private Director validateAndReturn(long id) {
         return directorRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Genre not found with id: " + id));
+                .orElseThrow(() -> new NotFoundException("Director not found with id: " + id));
     }
 
 }

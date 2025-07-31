@@ -9,8 +9,8 @@ import java.util.Arrays;
 @Getter
 @RequiredArgsConstructor
 public enum OrderBy {
-    YEAR("year", "release_date"),
-    LIKES("likes", "likes_count");
+    YEAR("year", "release_date ASC"),
+    LIKES("likes", "likes_count DESC");
 
     private final String param;
     private final String column;

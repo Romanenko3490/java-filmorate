@@ -1,11 +1,14 @@
 package ru.yandex.practicum.filmorate.service;
 
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dal.*;
+import ru.yandex.practicum.filmorate.dal.FilmRepository;
+import ru.yandex.practicum.filmorate.dal.GenreRepository;
+import ru.yandex.practicum.filmorate.dal.MpaRepository;
+import ru.yandex.practicum.filmorate.dal.UserRepository;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
@@ -13,7 +16,6 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.FIlmMapper;
 import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.model.film.Genre;
-
 
 import java.util.Collection;
 import java.util.List;
@@ -23,23 +25,12 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @Primary
+@RequiredArgsConstructor
 public class FilmDbService {
     private final UserRepository userRepository;
     private final FilmRepository filmRepository;
     private final MpaRepository mpaRepository;
     private final GenreRepository genreRepository;
-
-    @Autowired
-    public FilmDbService(
-            UserRepository userRepository,
-            FilmRepository filmRepository,
-            MpaRepository mpaRepository,
-            GenreRepository genreRepository) {
-        this.userRepository = userRepository;
-        this.filmRepository = filmRepository;
-        this.mpaRepository = mpaRepository;
-        this.genreRepository = genreRepository;
-    }
 
 
     public Collection<FilmDto> getAllFilms() {

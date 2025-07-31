@@ -198,12 +198,12 @@ class FeedServiceTest {
                 .satisfiesExactly(
                         addEvent -> {
                             assertThat(addEvent.getEventType()).isEqualTo(FeedEvent.EventType.FRIEND);
-                            assertThat(addEvent.getOperation()).isEqualTo(FeedEvent.Operation.ADD);
+                            assertThat(addEvent.getOperation()).isEqualTo(FeedEvent.Operation.REMOVE);
                             assertThat(addEvent.getEntityId()).isEqualTo(EXISTING_USER_ID_2);
                         },
                         removeEvent -> {
                             assertThat(removeEvent.getEventType()).isEqualTo(FeedEvent.EventType.FRIEND);
-                            assertThat(removeEvent.getOperation()).isEqualTo(FeedEvent.Operation.REMOVE);
+                            assertThat(removeEvent.getOperation()).isEqualTo(FeedEvent.Operation.ADD);
                             assertThat(removeEvent.getEntityId()).isEqualTo(EXISTING_USER_ID_2);
                         }
                 );
@@ -237,10 +237,11 @@ class FeedServiceTest {
     }
 
     @Test
-    void removeLikeEvent_shouldCreateRemoveOperation() {
+    void removeLikeEvent_shouldCreateRemoveOperation() throws InterruptedException {
         // 1. Добавляем лайк
         filmDbService.addLike(testFilmId, EXISTING_USER_ID_1);
         feedService.addFilmLikeEvent(EXISTING_USER_ID_1, testFilmId);
+        Thread.sleep(10);
 
         // 2. Удаляем лайк
         filmDbService.removeLike(testFilmId, EXISTING_USER_ID_1);
@@ -262,11 +263,11 @@ class FeedServiceTest {
                 .satisfiesExactly(
                         addEvent -> {
                             assertThat(addEvent.getEventType()).isEqualTo(FeedEvent.EventType.LIKE);
-                            assertThat(addEvent.getOperation()).isEqualTo(FeedEvent.Operation.ADD);
+                            assertThat(addEvent.getOperation()).isEqualTo(FeedEvent.Operation.REMOVE);
                         },
                         removeEvent -> {
                             assertThat(removeEvent.getEventType()).isEqualTo(FeedEvent.EventType.LIKE);
-                            assertThat(removeEvent.getOperation()).isEqualTo(FeedEvent.Operation.REMOVE);
+                            assertThat(removeEvent.getOperation()).isEqualTo(FeedEvent.Operation.ADD);
                         }
                 );
     }

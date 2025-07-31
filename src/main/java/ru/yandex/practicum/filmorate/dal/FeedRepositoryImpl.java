@@ -4,10 +4,14 @@ package ru.yandex.practicum.filmorate.dal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.FeedEvent;
 
+import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 @RequiredArgsConstructor
@@ -15,9 +19,8 @@ public class FeedRepositoryImpl implements FeedRepository {
     private final JdbcTemplate jdbc;
     private final RowMapper<FeedEvent> mapper;
     private static final String GET_FEED_QUERY =
-            "SELECT * FROM feed WHERE user_id = ? ORDER BY timestamp DESC";
-    private static final String ADD_EVENT_QUERY =
-            "INSERT INTO feed (user_id, event_type, operation, entity_id) VALUES (?, ?, ?, ?)";
+            "SELECT event_id, user_id, event_type, operation, entity_id, timestamp " +
+                    "FROM feed WHERE user_id = ? ORDER BY timestamp DESC";
 
 
     @Override
@@ -26,11 +29,20 @@ public class FeedRepositoryImpl implements FeedRepository {
     }
 
     @Override
-    public void addEvent(FeedEvent event) {
-        jdbc.update(ADD_EVENT_QUERY,
-                event.getUserId(),
-                event.getEventType().name(),
-                event.getOperation().name(),
-                event.getEntityId());
+    public FeedEvent addEvent(FeedEvent event) {
+        SimpleJdbcInsert insert = new SimpleJdbcInsert(jdbc)
+                .withTableName("feed")
+                .usingGeneratedKeyColumns("event_id");
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("user_id", event.getUserId());
+        parameters.put("event_type", event.getEventType().name());
+        parameters.put("operation", event.getOperation().name());
+        parameters.put("entity_id", event.getEntityId());
+        parameters.put("timestamp", Timestamp.from(event.getTimestamp()));
+
+        long eventId = insert.executeAndReturnKey(parameters).longValue();
+        event.setEventId(eventId);
+        return event;
     }
 }

@@ -7,5 +7,5 @@ import java.util.List;
 public interface FeedRepository {
     List<FeedEvent> getFeedByUserId(Long userId);
 
-    void addEvent(FeedEvent event);
+    FeedEvent addEvent(FeedEvent event);
 }

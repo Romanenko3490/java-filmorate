@@ -48,7 +48,7 @@ public class GenreRepositoryImpl extends BaseRepository<Genre> implements GenreR
     }
 
     @Override
-    public Set<Integer> findAllExistingIds(Set<Integer> ids) {
+    public Set<Long> findAllExistingIds(Set<Long> ids) {
         return super.findAllExistingIds(FIND_EXISTING_IDS_BASE_QUERY, ids);
     }
 

@@ -54,13 +54,13 @@ public class FilmDbService {
         }
 
         if (request.getGenres() != null && !request.getGenres().isEmpty()) {
-            Set<Integer> genreIds = request.getGenres().stream()
+            Set<Long> genreIds = request.getGenres().stream()
                     .map(Genre::getId)
                     .collect(Collectors.toSet());
 
-            Set<Integer> existingGenreIds = genreRepository.findAllExistingIds(genreIds);
+            Set<Long> existingGenreIds = genreRepository.findAllExistingIds(genreIds);
 
-            Set<Integer> missingGenreIds = genreIds.stream()
+            Set<Long> missingGenreIds = genreIds.stream()
                     .filter(id -> !existingGenreIds.contains(id))
                     .collect(Collectors.toSet());
 

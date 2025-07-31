@@ -65,12 +65,12 @@ public class BaseRepository<T> {
         return Boolean.TRUE.equals(jdbc.queryForObject(query, Boolean.class, args));
     }
 
-    protected Set<Integer> findAllExistingIds(String baseQuery, Set<Integer> ids) {
+    protected Set<Long> findAllExistingIds(String baseQuery, Set<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return new HashSet<>();
         }
         String placeholders = String.join(",", Collections.nCopies(ids.size(), "?"));
         String sql = String.format(baseQuery, placeholders);
-        return new HashSet<>(jdbc.queryForList(sql, ids.toArray(), Integer.class));
+        return new HashSet<>(jdbc.queryForList(sql, ids.toArray(), Long.class));
     }
 }

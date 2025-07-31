@@ -54,7 +54,7 @@ public class DirectorRepositoryImpl extends BaseRepository<Director> implements 
 
     @Override
     public boolean existAllByIds(Set<Long> ids) {
-        return ids.size() == findAllExistingIds(EXIST_BY_IDS_QUERY, ids, Long.class).size();
+        return ids.size() == findAllExistingIds(EXIST_BY_IDS_QUERY, ids).size();
     }
 
 }

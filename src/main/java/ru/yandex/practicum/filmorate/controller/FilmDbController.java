@@ -66,14 +66,14 @@ public class FilmDbController {
     @PutMapping("/{filmId}/like/{userId}")
     public FilmDto likeFilm(@PathVariable long filmId,
                             @PathVariable long userId) {
-        feedService.addLikeEvent(userId, filmId);
+        feedService.addFilmLikeEvent(userId, filmId);
         return filmDbService.addLike(filmId, userId);
     }
 
     @DeleteMapping("/{filmId}/like/{userId}")
     public FilmDto deleteLike(@PathVariable long filmId,
                               @PathVariable long userId) {
-        feedService.removeLikeEvent(userId, filmId);
+        feedService.removeFilmLikeEvent(userId, filmId);
         return filmDbService.removeLike(filmId, userId);
     }
 

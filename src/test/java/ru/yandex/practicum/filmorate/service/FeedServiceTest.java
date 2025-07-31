@@ -213,7 +213,7 @@ class FeedServiceTest {
     void addLikeEvent_shouldCreateLikeEvent() {
         // 1. Добавляем лайк
         filmDbService.addLike(testFilmId, EXISTING_USER_ID_1);
-        feedService.addLikeEvent(EXISTING_USER_ID_1, testFilmId);
+        feedService.addFilmLikeEvent(EXISTING_USER_ID_1, testFilmId);
         printFeedTableContent();
 
         // 2. Проверяем в БД
@@ -240,11 +240,11 @@ class FeedServiceTest {
     void removeLikeEvent_shouldCreateRemoveOperation() {
         // 1. Добавляем лайк
         filmDbService.addLike(testFilmId, EXISTING_USER_ID_1);
-        feedService.addLikeEvent(EXISTING_USER_ID_1, testFilmId);
+        feedService.addFilmLikeEvent(EXISTING_USER_ID_1, testFilmId);
 
         // 2. Удаляем лайк
         filmDbService.removeLike(testFilmId, EXISTING_USER_ID_1);
-        feedService.removeLikeEvent(EXISTING_USER_ID_1, testFilmId);
+        feedService.removeFilmLikeEvent(EXISTING_USER_ID_1, testFilmId);
         printFeedTableContent();
 
         // 3. Проверяем в БД
@@ -308,7 +308,7 @@ class FeedServiceTest {
     void events_shouldHaveCorrectTimestamps() {
         // 1. Добавляем события
         filmDbService.addLike(testFilmId, EXISTING_USER_ID_1);
-        feedService.addLikeEvent(EXISTING_USER_ID_1, testFilmId);
+        feedService.addFilmLikeEvent(EXISTING_USER_ID_1, testFilmId);
 
         userDbService.addFriend(EXISTING_USER_ID_1, EXISTING_USER_ID_2);
         feedService.addFriendEvent(EXISTING_USER_ID_1, EXISTING_USER_ID_2);

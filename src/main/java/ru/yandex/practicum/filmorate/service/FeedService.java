@@ -19,6 +19,7 @@ public class FeedService {
     private final FeedRepository feedRepository;
     private final UserDbService userDbService;
     private final FeedEventMapper mapper;
+    private final ReviewService reviewService;
 
 
     public List<FeedEvent> getFeedByUserId(Long userId) {
@@ -34,7 +35,7 @@ public class FeedService {
         feedRepository.addEvent(mapper.toFeedEvent(eventDto));
     }
 
-    // Friends
+    // Friends events
     public void addFriendEvent(long userId, long friendId) {
         addEvent(new FeedEventDto(userId, FeedEvent.EventType.FRIEND, FeedEvent.Operation.ADD, friendId));
     }
@@ -43,23 +44,36 @@ public class FeedService {
         addEvent(new FeedEventDto(userId, FeedEvent.EventType.FRIEND, FeedEvent.Operation.REMOVE, friendId));
     }
 
-    // Film Likes
-    public void addLikeEvent(long userId, long filmId) {
+    // Film likes events
+    public void addFilmLikeEvent(long userId, long filmId) {
         addEvent(new FeedEventDto(userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.ADD, filmId));
     }
 
-    public void removeLikeEvent(long userId, long filmId) {
+    public void removeFilmLikeEvent(long userId, long filmId) {
         addEvent(new FeedEventDto(userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.REMOVE, filmId));
     }
 
-    // Review Likes
+    // Review events (not review likes!)
     public void addReviewEvent(long userId, long reviewId) {
         addEvent(new FeedEventDto(userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.ADD, reviewId));
     }
 
-    public void removeReviewEvent(long userId, long reviewId) {
+    public void updateReviewEvent(long reviewId) {
+        Long userId = reviewService.getReviewAuthorId(reviewId);
+        addEvent(new FeedEventDto(userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.UPDATE, reviewId));
+    }
+
+    public void removeReviewEvent(long reviewId) {
+        Long userId = reviewService.getReviewAuthorId(reviewId);
         addEvent(new FeedEventDto(userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.REMOVE, reviewId));
     }
 
+    // Review likes events (treated as LIKE type)
+    public void addReviewLikeEvent(long userId, long reviewId) {
+        addEvent(new FeedEventDto(userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.ADD, reviewId));
+    }
 
+    public void removeReviewLikeEvent(long userId, long reviewId) {
+        addEvent(new FeedEventDto(userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.REMOVE, reviewId));
+    }
 }

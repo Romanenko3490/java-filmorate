@@ -22,12 +22,14 @@ public class ReviewController {
 
     @PostMapping
     public ReviewDto createReview(@RequestBody NewReviewRequest request) {
+        feedService.addReviewEvent(request.getUserId(), request.getFilmId());
         return reviewService.createReview(request);
     }
 
 
     @PutMapping
     public ReviewDto updateReview(@RequestBody UpdateReviewRequest request) {
+        feedService.updateReviewEvent(request.getReviewId());
         return reviewService.updateReview(request);
     }
 
@@ -35,6 +37,7 @@ public class ReviewController {
     @DeleteMapping("/{reviewId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteReview(@PathVariable("reviewId") Long reviewId) {
+        feedService.removeReviewEvent(reviewId);
         reviewService.deleteReview(reviewId);
     }
 
@@ -52,7 +55,7 @@ public class ReviewController {
     @PutMapping("/{reviewId}/like/{userId}")
     public void addLike(@PathVariable Long reviewId, @PathVariable Long userId) {
         reviewService.addLike(reviewId, userId);
-        feedService.addReviewEvent(userId, reviewId);
+        feedService.addReviewLikeEvent(userId, reviewId);
     }
 
     @PutMapping("/{reviewId}/dislike/{userId}")
@@ -63,7 +66,7 @@ public class ReviewController {
     @DeleteMapping("/{reviewId}/like/{userId}")
     public void deleteLike(@PathVariable Long reviewId, @PathVariable Long userId) {
         reviewService.removeLike(reviewId, userId);
-        feedService.removeReviewEvent(userId, reviewId);
+        feedService.removeReviewLikeEvent(userId, reviewId);
     }
 
     @DeleteMapping("/{reviewId}/dislike/{userId}")

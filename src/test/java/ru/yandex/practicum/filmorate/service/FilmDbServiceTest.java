@@ -10,10 +10,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.filmorate.dal.FilmRepository;
-import ru.yandex.practicum.filmorate.dal.GenreRepositoryImpl;
-import ru.yandex.practicum.filmorate.dal.MpaRepositoryImpl;
-import ru.yandex.practicum.filmorate.dal.UserRepository;
+import ru.yandex.practicum.filmorate.dal.*;
+import ru.yandex.practicum.filmorate.dal.mappers.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
@@ -36,8 +34,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         UserRepository.class,
         GenreRepositoryImpl.class,
         MpaRepositoryImpl.class,
+        DirectorRepositoryImpl.class,
         FilmRowMapper.class,
-        UserRowMapper.class})
+        UserRowMapper.class,
+        DirectorRowMapper.class})
 @Sql(scripts = {"/schema.sql", "/test-data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class FilmDbServiceTest {
 

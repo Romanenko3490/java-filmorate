@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.dal.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
+import ru.yandex.practicum.filmorate.enums.OrderBy;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FIlmMapper;
@@ -176,27 +177,10 @@ public class FilmDbService {
     }
 
     public List<FilmDto> getFilmsByDirector(long directorId, String sortBy) {
-        List<Film> films = filmRepository.getFilmsByDirector(directorId, ORDER_BY.fromParam(sortBy).getColumn());
+        List<Film> films = filmRepository.getFilmsByDirector(directorId, OrderBy.fromParam(sortBy).getColumn());
         return films.stream()
                 .map(FIlmMapper::mapToFilmDto)
                 .collect(Collectors.toList());
     }
 
-}
-
-@Getter
-@RequiredArgsConstructor
-enum ORDER_BY {
-    YEAR("year", "release_date"),
-    LIKES("likes", "likes_count");
-
-    private final String param;
-    private final String column;
-
-    public static ORDER_BY fromParam(String param) {
-        return Arrays.stream(ORDER_BY.values())
-                .filter(orderBy -> orderBy.getParam().equals(param))
-                .findFirst()
-                .orElseThrow(() -> new ValidationException("Invalid order by parameter: " + param));
-    }
 }

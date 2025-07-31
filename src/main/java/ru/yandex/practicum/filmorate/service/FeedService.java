@@ -59,8 +59,8 @@ public class FeedService {
     }
 
     // Review events (not review likes!)
-    public void addReviewEvent(long userId, long filmId) {
-        addEvent(new FeedEventDto(null, userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.ADD, filmId, Instant.now().toEpochMilli()));
+    public void addReviewEvent(long userId, long reviewId) {
+        addEvent(new FeedEventDto(null, userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.ADD, reviewId, Instant.now().toEpochMilli()));
     }
 
     public void updateReviewEvent(long reviewId) {

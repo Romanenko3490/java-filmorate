@@ -23,7 +23,7 @@ public class ReviewController {
     @PostMapping
     public ReviewDto createReview(@RequestBody NewReviewRequest request) {
         ReviewDto reviewDto = reviewService.createReview(request);
-        feedService.addReviewEvent(reviewDto.getUserId(), reviewDto.getReviewId());
+        feedService.addReviewEvent(reviewDto.getUserId(), reviewDto.getFilmId());
         return reviewDto;
     }
 

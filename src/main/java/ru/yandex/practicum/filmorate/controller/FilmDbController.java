@@ -41,10 +41,12 @@ public class FilmDbController {
 
     @GetMapping("/popular")
     public List<FilmDto> getPopularFilms(
-            @RequestParam(required = false) Integer count) {
-        List<FilmDto> result = filmDbService.getMostPopularFilms(count);
+            @RequestParam(defaultValue = "10") Integer count,
+            @RequestParam(required = false) Integer genreId,
+            @RequestParam(required = false) Integer year) {
+        List<FilmDto> result = filmDbService.getMostPopularFilms(count, genreId, year);
         if (result.isEmpty()) {
-            log.warn("Popular films request returned empty list. Check if any films have likes.");
+            log.warn("Popular films request returned empty list. Check if any films match the criteria.");
         }
         return result;
     }

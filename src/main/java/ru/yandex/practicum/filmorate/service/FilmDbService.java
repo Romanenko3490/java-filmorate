@@ -124,11 +124,11 @@ public class FilmDbService {
         return FIlmMapper.mapToFilmDto(film);
     }
 
-    public List<FilmDto> getMostPopularFilms(Integer count) {
-        List<Film> films = filmRepository.getPopularFilms(count);
+    public List<FilmDto> getMostPopularFilms(Integer count, Integer genreId, Integer year) {
+        List<Film> films = filmRepository.getPopularFilms(count, genreId, year);
 
         if (films.isEmpty()) {
-            log.warn("No films with likes found");
+            log.warn("No films found with the specified criteria");
         }
 
         return films.stream()

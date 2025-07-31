@@ -60,9 +60,9 @@ public class ErrorHandlingControllerAdvice {
     @ResponseBody
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleNotFoundException(final NotFoundException ex) {
+    public ViolationErrorResponse handleNotFoundException(final NotFoundException ex) {
         log.error("Not Found Exception", ex.getMessage());
-        return new ErrorResponse("Not Found", ex.getMessage());
+        return new ViolationErrorResponse(List.of(new Violation("Not Found", ex.getMessage())));
     }
 
     @ResponseBody

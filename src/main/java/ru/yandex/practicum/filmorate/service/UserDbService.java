@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
@@ -21,16 +22,10 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @Primary
+@RequiredArgsConstructor
 public class UserDbService {
     private final UserRepository userRepository;
     private final FriendshipRepository friendshipRepository;
-
-    @Autowired
-    public UserDbService(UserRepository userRepository,
-                         FriendshipRepository friendshipRepository) {
-        this.userRepository = userRepository;
-        this.friendshipRepository = friendshipRepository;
-    }
 
     public UserDto createUser(NewUserRequest request) {
         validateUserRequest(request);

@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @Primary
+@RequiredArgsConstructor
 public class FilmDbService {
     private final UserRepository userRepository;
     private final FilmRepository filmRepository;
@@ -32,19 +34,6 @@ public class FilmDbService {
     private final GenreRepository genreRepository;
     private final DirectorRepository directorRepository;
 
-    @Autowired
-    public FilmDbService(
-            UserRepository userRepository,
-            FilmRepository filmRepository,
-            MpaRepository mpaRepository,
-            GenreRepository genreRepository,
-            DirectorRepository directorRepository) {
-        this.userRepository = userRepository;
-        this.filmRepository = filmRepository;
-        this.mpaRepository = mpaRepository;
-        this.genreRepository = genreRepository;
-        this.directorRepository = directorRepository;
-    }
 
 
     public Collection<FilmDto> getAllFilms() {

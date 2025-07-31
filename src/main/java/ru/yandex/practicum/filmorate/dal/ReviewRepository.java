@@ -41,6 +41,7 @@ public class ReviewRepository extends BaseRepository<Review> {
             "SELECT * FROM reviews WHERE film_id = ? ORDER BY useful DESC LIMIT ?";
     private static final String GET_ALL_REVIEWS_LIMITED_QUERY =
             "SELECT * FROM reviews ORDER BY useful DESC LIMIT ?";
+    private static final String GET_AUTHOR_ID_QUERY = "SELECT user_id FROM reviews WHERE review_id = ?";
     // endregion
 
     public ReviewRepository(JdbcTemplate jdbc, RowMapper<Review> mapper) {
@@ -133,4 +134,15 @@ public class ReviewRepository extends BaseRepository<Review> {
         return jdbc.query(GET_ALL_REVIEWS_LIMITED_QUERY, mapper, count);
     }
     // endregion
+
+    //assist
+    public Optional<Long> findAuthorIdByReviewId(long reviewId) {
+        try {
+            return Optional.ofNullable(
+                    jdbc.queryForObject(GET_AUTHOR_ID_QUERY, Long.class, reviewId)
+            );
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
 }

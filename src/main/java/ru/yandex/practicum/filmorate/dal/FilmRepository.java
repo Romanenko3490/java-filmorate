@@ -70,6 +70,37 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     "LIMIT ?";
     private static final String CHECK_MPA_EXISTS_QUERY =
             "SELECT COUNT(*) FROM mpa_rating WHERE mpa_id = ?";
+
+    private static final String GET_POPULAR_FILMS_BY_GENRE_QUERY =
+            "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
+                    "m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "FROM films f " +
+                    "JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id\n" +
+                    "WHERE f.film_id IN (\n" +
+                    "    SELECT fg.film_id FROM film_genre fg WHERE fg.genre_id = ?\n" +
+                    ")\n" +
+                    "ORDER BY (SELECT COUNT(*) FROM film_likes fl WHERE fl.film_id = f.film_id) DESC\n" +
+                    "LIMIT ?";
+
+    private static final String GET_POPULAR_FILMS_BY_GENRE_AND_YEAR_QUERY =
+            "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
+                    "m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "FROM films f " +
+                    "JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
+                    "WHERE f.film_id IN (SELECT fg.film_id FROM film_genre fg WHERE fg.genre_id = ?\n" +
+                    ") AND EXTRACT(YEAR FROM f.release_date) = ?" +
+                    "ORDER BY (SELECT COUNT(*) FROM film_likes fl WHERE fl.film_id = f.film_id) DESC " +
+                    "LIMIT ?";
+
+    private static final String GET_POPULAR_FILMS_BY_YEAR_QUERY =
+            "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
+                    "m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
+                    "WHERE EXTRACT(YEAR FROM f.release_date) = ? " +
+                    "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) DESC " +
+                    "LIMIT ?";
+
     // endregion
 
     private static final String GET_FILM_DIRECTORS_QUERY =
@@ -185,14 +216,30 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         return filmMap;
     }
 
-    public List<Film> getPopularFilms(Integer count) {
+    public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
         int limit = (count != null && count > 0) ? count : 10;
-        log.debug("Executing popular films query with limit: {}", limit);
-        List<Film> films = jdbc.query(GET_POPULAR_FILMS_QUERY, mapper, limit);
-        log.debug("Found {} films with likes", films.size());
-        loadGenresForFilms(films);
-        loadDirectorsForFilms(films);
-        return films;
+        if (genreId != null && year != null) {
+            log.debug("Executing popular films query with genreId: {}, year: {}, limit: {}", genreId, year, limit);
+            List<Film> films = jdbc.query(GET_POPULAR_FILMS_BY_GENRE_AND_YEAR_QUERY, mapper, genreId, year, limit);
+            loadGenresForFilms(films);
+            return films;
+        } else if (genreId != null) {
+            log.debug("Executing popular films query with genreId: {}, limit: {}", genreId, limit);
+            List<Film> films = jdbc.query(GET_POPULAR_FILMS_BY_GENRE_QUERY, mapper, genreId, limit);
+            loadGenresForFilms(films);
+            return films;
+        } else if (year != null) {
+            log.debug("Executing popular films query with year: {}, limit: {}", year, limit);
+            List<Film> films = jdbc.query(GET_POPULAR_FILMS_BY_YEAR_QUERY, mapper, year, limit);
+            loadGenresForFilms(films);
+            return films;
+        } else {
+            log.debug("Executing popular films query with limit: {}", limit);
+            List<Film> films = jdbc.query(GET_POPULAR_FILMS_QUERY, mapper, limit);
+            loadGenresForFilms(films);
+            loadDirectorsForFilms(films);
+            return films;
+        }
     }
     // endregion
 

@@ -115,13 +115,14 @@ class FilmRepositoryTest {
 
         filmRepository.addLike(addedFilm.getId(), 1L);
 
-        List<Film> popularFilms = filmRepository.getPopularFilms(10);
+        List<Film> popularFilms = filmRepository.getPopularFilms(10, null, null);
+
         assertThat(popularFilms).extracting(Film::getId).contains(addedFilm.getId());
         assertThat(popularFilms.get(0).getId()).isEqualTo(addedFilm.getId()); // Проверяем, что он на первом месте
 
         filmRepository.removeLike(addedFilm.getId(), 1L);
 
-        List<Film> filmsAfterRemove = filmRepository.getPopularFilms(10);
+        List<Film> filmsAfterRemove = filmRepository.getPopularFilms(10, null, null);
 
         if (filmsAfterRemove.size() > 1) {
             assertThat(filmsAfterRemove.stream().limit(1))
@@ -151,7 +152,7 @@ class FilmRepositoryTest {
         filmRepository.addLike(film2.getId(), 1L);
         filmRepository.addLike(film2.getId(), 2L);
 
-        List<Film> popularFilms = filmRepository.getPopularFilms(2);
+        List<Film> popularFilms = filmRepository.getPopularFilms(2, null, null);
 
         assertThat(popularFilms).hasSize(2);
         assertThat(popularFilms.get(0).getId()).isEqualTo(film2.getId());

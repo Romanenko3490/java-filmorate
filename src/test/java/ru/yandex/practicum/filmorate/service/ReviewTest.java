@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         DirectorRowMapper.class
 })
 @Sql(scripts = {"/schema.sql", "/test-data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-class ReviewServiceTest {
+class ReviewTest {
 
     @Autowired
     private ReviewService reviewService;

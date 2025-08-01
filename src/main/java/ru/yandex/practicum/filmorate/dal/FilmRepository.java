@@ -103,6 +103,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     // endregion
 
+    //Director Query Region
     private static final String GET_FILM_DIRECTORS_QUERY =
             "SELECT d.id, d.name FROM film_directors fd " +
                     "JOIN directors d ON fd.id = d.id " +
@@ -119,6 +120,14 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     "WHERE fd.id = ? " +
                     "GROUP BY f.film_id, m.mpa_id " +
                     "ORDER BY %s";
+    //endregion
+
+    //Recommendations Query Region
+    private static final String GET_ALL_USER_LIKES =
+            "SELECT user_id, film_id FROM film_likes";
+    private static final String GET_USER_LIKED_FILMS =
+            "SELECT film_id FROM film_likes WHERE user_id = ?";
+    //endregion
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -332,6 +341,8 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     }
     // endregion
 
+
+    //Director ops region
     private void loadDirectorsForFilm(Film film) {
         List<Director> directors = jdbc.query(GET_FILM_DIRECTORS_QUERY, (rs, rowNum) -> {
             return new Director(rs.getLong("id"), rs.getString("name"));
@@ -375,5 +386,155 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         loadDirectorsForFilms(films);
         return films;
     }
+    //endregion
+
+    //Recommendations ops region
+
+    //реализация Slope One алгоритма - ресурс (https://www.baeldung.com/java-collaborative-filtering-recommendations).
+    public List<Film> getRecommendedFilms(long userId) {
+        // 1. Получаем все лайки пользователей
+        List<Map<String, Object>> allLikes = jdbc.queryForList(GET_ALL_USER_LIKES);
+
+        // 2. Получаем фильмы, которые лайкнул текущий пользователь
+        List<Long> userLikedFilms = jdbc.queryForList(
+                GET_USER_LIKED_FILMS, Long.class, userId);
+
+        // 3. Строим матрицу пользователь-фильм
+        Map<Long, Map<Long, Integer>> userItemMatrix = buildUserItemMatrix(allLikes);
+
+        // 4. Вычисляем средние разницы между фильмами
+        Map<Long, Map<Long, Double>> deviations = computeDeviations(userItemMatrix);
+
+        // 5. Получаем предсказанные оценки для непросмотренных фильмов
+        Map<Long, Double> predictions = predictRatings(
+                userId, userLikedFilms, userItemMatrix, deviations);
+
+        // 6. Сортируем фильмы по предсказанным оценкам
+        List<Long> recommendedFilmIds = predictions.entrySet().stream()
+                .sorted(Map.Entry.<Long, Double>comparingByValue().reversed())
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+
+        // 7. Получаем полную информацию о фильмах
+        return getFilmsByIds(recommendedFilmIds);
+    }
+
+// Вспомогательные методы:
+
+    private Map<Long, Map<Long, Integer>> buildUserItemMatrix(List<Map<String, Object>> likes) {
+        Map<Long, Map<Long, Integer>> matrix = new HashMap<>();
+
+        for (Map<String, Object> like : likes) {
+            Long userId = ((Number) like.get("user_id")).longValue();
+            Long filmId = ((Number) like.get("film_id")).longValue();
+
+            matrix.computeIfAbsent(userId, k -> new HashMap<>())
+                    .put(filmId, 1); // 1 означает лайк
+        }
+
+        return matrix;
+    }
+
+    private Map<Long, Map<Long, Double>> computeDeviations(
+            Map<Long, Map<Long, Integer>> userItemMatrix) {
+        Map<Long, Map<Long, List<Integer>>> freq = new HashMap<>();
+        Map<Long, Map<Long, Double>> dev = new HashMap<>();
+
+        // Для каждого пользователя
+        for (Map<Long, Integer> userRatings : userItemMatrix.values()) {
+            // Для каждой пары фильмов, которые оценил пользователь
+            for (Map.Entry<Long, Integer> entry1 : userRatings.entrySet()) {
+                Long filmId1 = entry1.getKey();
+                int rating1 = entry1.getValue();
+
+                for (Map.Entry<Long, Integer> entry2 : userRatings.entrySet()) {
+                    Long filmId2 = entry2.getKey();
+                    int rating2 = entry2.getValue();
+
+                    if (!filmId1.equals(filmId2)) {
+                        // Инициализируем структуры данных
+                        dev.computeIfAbsent(filmId1, k -> new HashMap<>())
+                                .computeIfAbsent(filmId2, k -> 0.0);
+
+                        freq.computeIfAbsent(filmId1, k -> new HashMap<>())
+                                .computeIfAbsent(filmId2, k -> new ArrayList<>());
+
+                        // Добавляем разницу в рейтингах
+                        dev.get(filmId1).put(filmId2,
+                                dev.get(filmId1).get(filmId2) + (rating1 - rating2));
+
+                        freq.get(filmId1).get(filmId2).add(1);
+                    }
+                }
+            }
+        }
+
+        // Вычисляем средние разницы
+        for (Long filmId1 : dev.keySet()) {
+            for (Long filmId2 : dev.get(filmId1).keySet()) {
+                int count = freq.get(filmId1).get(filmId2).size();
+                dev.get(filmId1).put(filmId2,
+                        dev.get(filmId1).get(filmId2) / count);
+            }
+        }
+
+        return dev;
+    }
+
+    private Map<Long, Double> predictRatings(long userId,
+                                             List<Long> userLikedFilms,
+                                             Map<Long, Map<Long, Integer>> userItemMatrix,
+                                             Map<Long, Map<Long, Double>> deviations) {
+        Map<Long, Double> predictions = new HashMap<>();
+        Map<Long, Integer> frequencies = new HashMap<>();
+
+        // Для каждого фильма, который пользователь не оценил
+        Set<Long> allFilmIds = getAllFilmIds();
+        allFilmIds.removeAll(userLikedFilms);
+
+        for (Long filmId : allFilmIds) {
+            double sum = 0;
+            int count = 0;
+
+            // Используем оценки пользователя и отклонения для предсказания
+            for (Long likedFilmId : userLikedFilms) {
+                if (deviations.containsKey(likedFilmId) &&
+                        deviations.get(likedFilmId).containsKey(filmId)) {
+
+                    double deviation = deviations.get(likedFilmId).get(filmId);
+                    sum += (userItemMatrix.get(userId).get(likedFilmId) + deviation);
+                    count++;
+                }
+            }
+
+            if (count > 0) {
+                predictions.put(filmId, sum / count);
+                frequencies.put(filmId, count);
+            }
+        }
+
+        return predictions;
+    }
+
+    private Set<Long> getAllFilmIds() {
+        return new HashSet<>(jdbc.queryForList("SELECT film_id FROM films", Long.class));
+    }
+
+    private List<Film> getFilmsByIds(List<Long> filmIds) {
+        if (filmIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String inClause = String.join(",", Collections.nCopies(filmIds.size(), "?"));
+        String query = GET_ALL_FILMS_QUERY + " WHERE f.film_id IN (" + inClause + ")";
+
+        List<Film> films = jdbc.query(query, mapper, filmIds.toArray());
+        loadGenresForFilms(films);
+        loadDirectorsForFilms(films);
+
+        return films;
+    }
+//endregion
+
 
 }

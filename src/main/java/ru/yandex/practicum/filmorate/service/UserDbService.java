@@ -4,14 +4,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.FilmRepository;
 import ru.yandex.practicum.filmorate.dal.FriendshipRepository;
 import ru.yandex.practicum.filmorate.dal.UserRepository;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
+import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.model.user.User;
 
 import java.time.LocalDate;
@@ -25,6 +29,7 @@ import java.util.stream.Collectors;
 public class UserDbService {
     private final UserRepository userRepository;
     private final FriendshipRepository friendshipRepository;
+    private final FilmRepository filmRepository;
 
     public UserDto createUser(NewUserRequest request) {
         validateUserRequest(request);
@@ -167,5 +172,15 @@ public class UserDbService {
 
     public boolean userExists(long userId) {
         return userRepository.getUser(userId).isPresent();
+    }
+
+    //Recommendations
+    public List<FilmDto> getRecommendations(long userId) {
+        getUserOrThrow(userId);
+        List<Film> recommendedFilms = filmRepository.getRecommendedFilms(userId);
+
+        return recommendedFilms.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
     }
 }

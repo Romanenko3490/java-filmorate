@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         UserRowMapper.class,
         DirectorRowMapper.class})
 @Sql(scripts = {"/schema.sql", "/test-data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-class FilmDbServiceTest {
+class FilmsTest {
 
     @Autowired
     private FilmDbService filmDbService;

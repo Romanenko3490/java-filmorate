@@ -6,12 +6,15 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.FriendshipRepository;
 import ru.yandex.practicum.filmorate.dal.UserRepository;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.FIlmMapper;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
+import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.model.user.User;
 
 import java.time.LocalDate;
@@ -167,5 +170,15 @@ public class UserDbService {
 
     public boolean userExists(long userId) {
         return userRepository.getUser(userId).isPresent();
+    }
+
+    //Recommendations
+    public List<FilmDto> getRecommendations(long userId) {
+        getUserOrThrow(userId);
+        List<Film> recommendedFilms = friendshipRepository.getRecommendedFilms(userId);
+
+        return recommendedFilms.stream()
+                .map(FIlmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
     }
 }

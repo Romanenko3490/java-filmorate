@@ -103,6 +103,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     // endregion
 
+    //Director Query Region
     private static final String GET_FILM_DIRECTORS_QUERY =
             "SELECT d.id, d.name FROM film_directors fd " +
                     "JOIN directors d ON fd.id = d.id " +
@@ -119,6 +120,37 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     "WHERE fd.id = ? " +
                     "GROUP BY f.film_id, m.mpa_id " +
                     "ORDER BY %s";
+    //endregion
+
+    //Recommendations Query Region
+    private static final String GET_RECOMMENDATIONS_QUERY = """
+        WITH user_likes AS (
+            SELECT film_id 
+            FROM film_likes 
+            WHERE user_id = ?
+        ),
+        similar_users AS (
+            SELECT fl.user_id, COUNT(fl.film_id) AS common_likes
+            FROM film_likes fl
+            WHERE fl.film_id IN (SELECT film_id FROM user_likes)
+            AND fl.user_id != ?
+            GROUP BY fl.user_id
+            ORDER BY common_likes DESC
+            LIMIT 5
+        ),
+        recommended_films AS (
+            SELECT DISTINCT fl.film_id
+            FROM film_likes fl
+            JOIN similar_users su ON fl.user_id = su.user_id
+            WHERE fl.film_id NOT IN (SELECT film_id FROM user_likes)
+        )
+        SELECT f.*, m.mpa_id, m.mpa_name, m.description AS mpa_description
+        FROM films f
+        JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id
+        WHERE f.film_id IN (SELECT film_id FROM recommended_films)
+        """;
+
+    //endregion
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -332,6 +364,8 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     }
     // endregion
 
+
+    //Director ops region
     private void loadDirectorsForFilm(Film film) {
         List<Director> directors = jdbc.query(GET_FILM_DIRECTORS_QUERY, (rs, rowNum) -> {
             return new Director(rs.getLong("id"), rs.getString("name"));
@@ -371,6 +405,15 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             film.setDuration(rs.getInt("duration"));
             return film;
         }, directorId);
+        loadGenresForFilms(films);
+        loadDirectorsForFilms(films);
+        return films;
+    }
+    //endregion
+
+    //Recommendations ops region
+    public List<Film> getRecommendedFilms(long userId) {
+        List<Film> films = jdbc.query(GET_RECOMMENDATIONS_QUERY, mapper, userId, userId);
         loadGenresForFilms(films);
         loadDirectorsForFilms(films);
         return films;

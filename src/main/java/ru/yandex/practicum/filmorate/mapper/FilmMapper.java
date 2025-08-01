@@ -10,7 +10,7 @@ import ru.yandex.practicum.filmorate.model.film.Film;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class FIlmMapper {
+public class FilmMapper {
     public static Film mapToFilm(NewFilmRequest request) {
         Film film = new Film();
         film.setName(request.getName());

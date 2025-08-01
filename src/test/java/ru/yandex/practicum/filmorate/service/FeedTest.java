@@ -51,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         MpaRepositoryImpl.class
 })
 @Sql(scripts = {"/schema.sql", "/test-data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-class FeedServiceTest {
+class FeedTest {
 
     @Autowired
     private FeedService feedService;

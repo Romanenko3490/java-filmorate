@@ -12,7 +12,7 @@ import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.enums.OrderBy;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.mapper.FIlmMapper;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.film.Director;
 import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.model.film.Genre;
@@ -37,14 +37,14 @@ public class FilmDbService {
     public Collection<FilmDto> getAllFilms() {
         log.info("Getting all films");
         return filmRepository.getFilms().stream()
-                .map(FIlmMapper::mapToFilmDto)
+                .map(FilmMapper::mapToFilmDto)
                 .collect(Collectors.toList());
     }
 
     public FilmDto getFilmById(long filmId) {
         log.info("Getting film by id: {}", filmId);
         return filmRepository.getFilmById(filmId)
-                .map(FIlmMapper::mapToFilmDto)
+                .map(FilmMapper::mapToFilmDto)
                 .orElseThrow(() -> new NotFoundException("Film with id: " + filmId));
     }
 
@@ -71,9 +71,9 @@ public class FilmDbService {
 
         validateDirectors(request.getDirectors());
 
-        Film film = FIlmMapper.mapToFilm(request);
+        Film film = FilmMapper.mapToFilm(request);
         filmRepository.addFilm(film);
-        return FIlmMapper.mapToFilmDto(film);
+        return FilmMapper.mapToFilmDto(film);
     }
 
     public FilmDto updateFilm(long filmId, UpdateFilmRequest request) {
@@ -89,7 +89,7 @@ public class FilmDbService {
         if (request.getDirectors() != null) film.setDirectors(request.getDirectors());
 
         filmRepository.updateFilm(film);
-        return FIlmMapper.mapToFilmDto(film);
+        return FilmMapper.mapToFilmDto(film);
     }
 
     public FilmDto addLike(long filmId, long userId) {
@@ -102,7 +102,7 @@ public class FilmDbService {
         filmRepository.addLike(filmId, userId);
 
         return filmRepository.getFilmById(filmId)
-                .map(FIlmMapper::mapToFilmDto)
+                .map(FilmMapper::mapToFilmDto)
                 .orElseThrow(() -> new NotFoundException("Film not found after like"));
     }
 
@@ -116,7 +116,7 @@ public class FilmDbService {
         film.getLikes().remove(userId);
         filmRepository.updateFilm(film);
         log.info("User {} removed like from film {}", userId, filmId);
-        return FIlmMapper.mapToFilmDto(film);
+        return FilmMapper.mapToFilmDto(film);
     }
 
     public List<FilmDto> getMostPopularFilms(Integer count, Integer genreId, Integer year) {
@@ -127,7 +127,7 @@ public class FilmDbService {
         }
 
         return films.stream()
-                .map(FIlmMapper::mapToFilmDto)
+                .map(FilmMapper::mapToFilmDto)
                 .collect(Collectors.toList());
     }
 
@@ -163,7 +163,7 @@ public class FilmDbService {
     public List<FilmDto> getFilmsByDirector(long directorId, String sortBy) {
         List<Film> films = filmRepository.getFilmsByDirector(directorId, OrderBy.fromParam(sortBy).getColumn());
         return films.stream()
-                .map(FIlmMapper::mapToFilmDto)
+                .map(FilmMapper::mapToFilmDto)
                 .collect(Collectors.toList());
     }
 
@@ -191,7 +191,7 @@ public class FilmDbService {
         List<Film> films = filmRepository.searchFilms(query, by);
 
         return films.stream()
-                .map(FIlmMapper::mapToFilmDto)
+                .map(FilmMapper::mapToFilmDto)
                 .collect(Collectors.toList());
     }
 

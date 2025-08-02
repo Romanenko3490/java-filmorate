@@ -90,4 +90,22 @@ public class FilmDbController {
         return filmDbService.getFilmsByDirector(directorId, sortBy);
     }
 
+    @GetMapping("/search")
+    public List<FilmDto> searchFilms(
+            @RequestParam String query,
+            @RequestParam(required = false) String by) {
+
+        log.info("Search request: query='{}', by='{}'", query, by);
+
+        if (query == null || query.trim().isEmpty()) {
+            log.warn("Empty search query provided");
+            return List.of();
+        }
+
+        List<FilmDto> results = filmDbService.searchFilms(query, by);
+        log.info("Search returned {} results", results.size());
+
+        return results;
+    }
+
 }

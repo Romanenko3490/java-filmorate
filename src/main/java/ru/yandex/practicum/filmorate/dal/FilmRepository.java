@@ -103,6 +103,43 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     // endregion
 
+    // region SQL Queries - Search Operations
+    private static final String SEARCH_FILMS_BY_TITLE_QUERY =
+            "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
+                    "m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
+                    "WHERE LOWER(f.name) LIKE LOWER(?) " +
+                    "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_likes.film_id = f.film_id) DESC, f.film_id";
+
+    private static final String SEARCH_FILMS_BY_DIRECTOR_QUERY =
+            "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
+                    "m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
+                    "WHERE EXISTS (" +
+                    "    SELECT 1 FROM film_directors fd " +
+                    "    JOIN directors d ON fd.id = d.id " +
+                    "    WHERE fd.film_id = f.film_id " +
+                    "    AND LOWER(d.name) LIKE LOWER(?)" +
+                    ") " +
+                    "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_likes.film_id = f.film_id) DESC, f.film_id";
+
+    private static final String SEARCH_FILMS_BY_TITLE_AND_DIRECTOR_QUERY =
+            "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
+                    "m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
+                    "WHERE LOWER(f.name) LIKE LOWER(?) " +
+                    "   OR EXISTS (" +
+                    "       SELECT 1 FROM film_directors fd " +
+                    "       JOIN directors d ON fd.id = d.id " +
+                    "       WHERE fd.film_id = f.film_id " +
+                    "       AND LOWER(d.name) LIKE LOWER(?)" +
+                    "   ) " +
+                    "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_likes.film_id = f.film_id) DESC, f.film_id";
+    // endregion
+
     private static final String GET_FILM_DIRECTORS_QUERY =
             "SELECT d.id, d.name FROM film_directors fd " +
                     "JOIN directors d ON fd.id = d.id " +
@@ -373,6 +410,47 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         }, directorId);
         loadGenresForFilms(films);
         loadDirectorsForFilms(films);
+        return films;
+    }
+
+    // Поиск
+
+    public List<Film> searchFilms(String query, String by) {
+        log.debug("Searching films with query: '{}', by: '{}'", query, by);
+
+        if (query == null || query.trim().isEmpty()) {
+            return List.of();
+        }
+
+        String searchPattern = "%" + query.trim() + "%";
+        List<Film> films;
+
+        if (by == null || by.trim().isEmpty()) {
+            // Если параметр by не указан, ищем по названию по умолчанию
+            films = jdbc.query(SEARCH_FILMS_BY_TITLE_QUERY, mapper, searchPattern);
+        } else {
+            // Нормализуем параметр by - убираем пробелы и приводим к нижнему регистру
+            String normalizedBy = by.toLowerCase().replaceAll("\\s", "");
+
+            if (normalizedBy.contains("title") && normalizedBy.contains("director")) {
+                // Поиск и по названию, и по режиссёру
+                films = jdbc.query(SEARCH_FILMS_BY_TITLE_AND_DIRECTOR_QUERY, mapper, searchPattern, searchPattern);
+            } else if (normalizedBy.contains("title")) {
+                // Поиск только по названию
+                films = jdbc.query(SEARCH_FILMS_BY_TITLE_QUERY, mapper, searchPattern);
+            } else if (normalizedBy.contains("director")) {
+                // Поиск только по режиссёру
+                films = jdbc.query(SEARCH_FILMS_BY_DIRECTOR_QUERY, mapper, searchPattern);
+            } else {
+                // Неизвестный параметр by, ищем по названию по умолчанию
+                films = jdbc.query(SEARCH_FILMS_BY_TITLE_QUERY, mapper, searchPattern);
+            }
+        }
+
+        loadGenresForFilms(films);
+        loadDirectorsForFilms(films);
+
+        log.debug("Found {} films for search query: '{}'", films.size(), query);
         return films;
     }
 

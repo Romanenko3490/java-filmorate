@@ -13,22 +13,30 @@ public class WebConfig implements WebMvcConfigurer {
     public void addViewControllers(ViewControllerRegistry registry) {
         // Перенаправление всех путей на index.html
         registry.addViewController("/").setViewName("forward:/index.html");
-        registry.addViewController("/{x:[\\w\\-]+}").setViewName("forward:/index.html");
-        registry.addViewController("/{x:^(?!api$).*$}/**/{y:[\\w\\-]+}")
-                .setViewName("forward:/index.html");
+
+        // Упрощенные паттерны для SPA
+        registry.addViewController("/films").setViewName("forward:/index.html");
+        registry.addViewController("/films/**").setViewName("forward:/index.html");
+        registry.addViewController("/users").setViewName("forward:/index.html");
+        registry.addViewController("/users/**").setViewName("forward:/index.html");
+        registry.addViewController("/reviews").setViewName("forward:/index.html");
+        registry.addViewController("/genres").setViewName("forward:/index.html");
+        registry.addViewController("/mpa").setViewName("forward:/index.html");
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Обработка статических ресурсов
         registry.addResourceHandler("/**")
-                .addResourceLocations("classpath:/static/");
+                .addResourceLocations("classpath:/static/")
+                .setCachePeriod(0);
     }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*")
-                .allowedMethods("*");
+                .allowedOrigins("http://localhost:8080") // или "*" для разработки
+                .allowedMethods("GET", "POST", "PUT", "DELETE")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }

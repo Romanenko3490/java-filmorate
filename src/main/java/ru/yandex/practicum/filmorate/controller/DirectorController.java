@@ -12,7 +12,7 @@ import java.util.List;
 
 @Validated
 @RestController
-@RequestMapping("/directors")
+@RequestMapping("/api//directors")
 @RequiredArgsConstructor
 public class DirectorController {
 

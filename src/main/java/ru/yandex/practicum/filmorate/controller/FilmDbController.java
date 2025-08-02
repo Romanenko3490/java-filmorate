@@ -21,7 +21,7 @@ import java.util.List;
 @RestController
 @Validated
 @RequiredArgsConstructor
-@RequestMapping("/films")
+@RequestMapping("/api/films")
 public class FilmDbController {
 
     private final FilmDbService filmDbService;

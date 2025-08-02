@@ -1,288 +1,389 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const API_BASE_URL = '';
+    const API_BASE_URL = 'http://localhost:8080/api';
 
-    // Навигация
-    document.querySelectorAll('nav a').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const pageId = this.getAttribute('data-page');
-            showPage(pageId);
+    // Инициализация приложения
+    initApp();
+
+    function initApp() {
+        // Навигация
+        setupNavigation();
+
+        // Обработчики для фильмов
+        document.getElementById('get-films').addEventListener('click', fetchFilms);
+        document.getElementById('get-popular').addEventListener('click', fetchPopularFilms);
+        document.getElementById('film-form').addEventListener('submit', handleFilmSubmit);
+
+        // Обработчики для пользователей
+        document.getElementById('get-users').addEventListener('click', fetchUsers);
+        document.getElementById('user-form').addEventListener('submit', handleUserSubmit);
+
+        // Загружаем начальные данные
+        showPage('films');
+        fetchInitialData();
+    }
+
+    function setupNavigation() {
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const pageId = this.getAttribute('data-page');
+                showPage(pageId);
+            });
         });
-    });
-
-    // Обработчики для фильмов
-    document.getElementById('get-films').addEventListener('click', fetchFilms);
-    document.getElementById('get-popular').addEventListener('click', fetchPopularFilms);
-    document.getElementById('film-form').addEventListener('submit', handleFilmSubmit);
-
-    // Обработчики для пользователей
-    document.getElementById('get-users').addEventListener('click', fetchUsers);
-    document.getElementById('user-form').addEventListener('submit', handleUserSubmit);
-
-    // Загружаем начальные данные
-    showPage('films');
-    fetchFilms();
-    fetchGenres();
-    fetchMpaRatings();
-});
-
-function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
-    });
-    document.getElementById(pageId).classList.add('active');
-}
-
-// Функции для работы с фильмами
-async function fetchFilms() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/films`);
-        const films = await response.json();
-        renderFilms(films);
-    } catch (error) {
-        console.error('Ошибка при загрузке фильмов:', error);
     }
-}
 
-async function fetchPopularFilms() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/films/popular?count=10`);
-        const films = await response.json();
-        renderFilms(films);
-    } catch (error) {
-        console.error('Ошибка при загрузке популярных фильмов:', error);
+    function fetchInitialData() {
+        fetchFilms();
+        fetchGenres();
+        fetchMpaRatings();
     }
-}
 
-function renderFilms(films) {
-    const filmsList = document.getElementById('films-list');
-    filmsList.innerHTML = '';
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(page => {
+            page.classList.remove('active');
+        });
+        document.getElementById(pageId).classList.add('active');
+    }
 
-    films.forEach(film => {
-        const filmCard = document.createElement('div');
-        filmCard.className = 'item-card';
-        filmCard.innerHTML = `
-            <h3>${film.name}</h3>
-            <p>${film.description || 'Нет описания'}</p>
-            <p>Дата выхода: ${film.releaseDate}</p>
-            <p>Длительность: ${film.duration} мин</p>
-            <div class="actions">
-                <button onclick="editFilm(${film.id})">Редактировать</button>
-                <button onclick="deleteFilm(${film.id})">Удалить</button>
-            </div>
-        `;
-        filmsList.appendChild(filmCard);
-    });
-}
+    // Функции для работы с фильмами
+    async function fetchFilms() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/films`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const films = await response.json();
+            renderFilms(films);
+        } catch (error) {
+            console.error('Ошибка при загрузке фильмов:', error);
+            showError('Ошибка при загрузке фильмов');
+        }
+    }
 
-async function handleFilmSubmit(e) {
-    e.preventDefault();
-    const form = e.target;
-    const filmId = form.querySelector('#film-id').value;
-    const filmData = {
-        name: form.querySelector('#film-name').value,
-        description: form.querySelector('#film-description').value,
-        releaseDate: form.querySelector('#film-release-date').value,
-        duration: parseInt(form.querySelector('#film-duration').value),
-    };
+    async function fetchPopularFilms() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/films/popular?count=10`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const films = await response.json();
+            renderFilms(films);
+        } catch (error) {
+            console.error('Ошибка при загрузке популярных фильмов:', error);
+            showError('Ошибка при загрузке популярных фильмов');
+        }
+    }
 
-    try {
-        let response;
-        if (filmId) {
-            // Обновление существующего фильма
-            filmData.id = filmId;
-            response = await fetch(`${API_BASE_URL}/films`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(filmData),
-            });
-        } else {
-            // Создание нового фильма
-            response = await fetch(`${API_BASE_URL}/films`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(filmData),
-            });
+    function renderFilms(films) {
+        const filmsList = document.getElementById('films-list');
+        filmsList.innerHTML = '';
+
+        if (!films || films.length === 0) {
+            filmsList.innerHTML = '<p>Нет доступных фильмов</p>';
+            return;
         }
 
-        if (response.ok) {
+        films.forEach(film => {
+            const filmCard = document.createElement('div');
+            filmCard.className = 'item-card';
+            filmCard.innerHTML = `
+                <h3>${film.name}</h3>
+                <p>${film.description || 'Нет описания'}</p>
+                <p>Дата выхода: ${formatDate(film.releaseDate)}</p>
+                <p>Длительность: ${film.duration} мин</p>
+                <div class="actions">
+                    <button data-id="${film.id}" class="edit-film">Редактировать</button>
+                    <button data-id="${film.id}" class="delete-film">Удалить</button>
+                </div>
+            `;
+            filmsList.appendChild(filmCard);
+        });
+
+        // Добавляем обработчики для новых кнопок
+        document.querySelectorAll('.edit-film').forEach(btn => {
+            btn.addEventListener('click', () => editFilm(btn.dataset.id));
+        });
+
+        document.querySelectorAll('.delete-film').forEach(btn => {
+            btn.addEventListener('click', () => deleteFilm(btn.dataset.id));
+        });
+    }
+
+    async function handleFilmSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const filmId = form.querySelector('#film-id').value;
+
+        const filmData = {
+            name: form.querySelector('#film-name').value,
+            description: form.querySelector('#film-description').value,
+            releaseDate: form.querySelector('#film-release-date').value,
+            duration: parseInt(form.querySelector('#film-duration').value),
+        };
+
+        try {
+            const url = filmId ? `${API_BASE_URL}/films/${filmId}` : `${API_BASE_URL}/films`;
+            const method = filmId ? 'PUT' : 'POST';
+
+            if (filmId) filmData.id = filmId;
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(filmData),
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
             form.reset();
             fetchFilms();
-        } else {
-            console.error('Ошибка при сохранении фильма');
+            showSuccess(filmId ? 'Фильм обновлен' : 'Фильм создан');
+        } catch (error) {
+            console.error('Ошибка при сохранении фильма:', error);
+            showError('Ошибка при сохранении фильма');
         }
-    } catch (error) {
-        console.error('Ошибка:', error);
     }
-}
 
-// Функции для работы с пользователями
-async function fetchUsers() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/users`);
-        const users = await response.json();
-        renderUsers(users);
-    } catch (error) {
-        console.error('Ошибка при загрузке пользователей:', error);
+    // Функции для работы с пользователями
+    async function fetchUsers() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/users`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const users = await response.json();
+            renderUsers(users);
+        } catch (error) {
+            console.error('Ошибка при загрузке пользователей:', error);
+            showError('Ошибка при загрузке пользователей');
+        }
     }
-}
 
-function renderUsers(users) {
-    const usersList = document.getElementById('users-list');
-    usersList.innerHTML = '';
+    function renderUsers(users) {
+        const usersList = document.getElementById('users-list');
+        usersList.innerHTML = '';
 
-    users.forEach(user => {
-        const userCard = document.createElement('div');
-        userCard.className = 'item-card';
-        userCard.innerHTML = `
-            <h3>${user.name || user.login}</h3>
-            <p>Email: ${user.email}</p>
-            <p>Логин: ${user.login}</p>
-            <p>День рождения: ${user.birthday || 'Не указан'}</p>
-            <div class="actions">
-                <button onclick="editUser(${user.id})">Редактировать</button>
-                <button onclick="deleteUser(${user.id})">Удалить</button>
-            </div>
-        `;
-        usersList.appendChild(userCard);
-    });
-}
+        if (!users || users.length === 0) {
+            usersList.innerHTML = '<p>Нет зарегистрированных пользователей</p>';
+            return;
+        }
 
-async function handleUserSubmit(e) {
-    e.preventDefault();
-    const form = e.target;
-    const userId = form.querySelector('#user-id').value;
-    const userData = {
-        email: form.querySelector('#user-email').value,
-        login: form.querySelector('#user-login').value,
-        name: form.querySelector('#user-name').value || form.querySelector('#user-login').value,
-        birthday: form.querySelector('#user-birthday').value,
-    };
+        users.forEach(user => {
+            const userCard = document.createElement('div');
+            userCard.className = 'item-card';
+            userCard.innerHTML = `
+                <h3>${user.name || user.login}</h3>
+                <p>Email: ${user.email}</p>
+                <p>Логин: ${user.login}</p>
+                <p>День рождения: ${formatDate(user.birthday) || 'Не указан'}</p>
+                <div class="actions">
+                    <button data-id="${user.id}" class="edit-user">Редактировать</button>
+                    <button data-id="${user.id}" class="delete-user">Удалить</button>
+                </div>
+            `;
+            usersList.appendChild(userCard);
+        });
 
-    try {
-        let response;
-        if (userId) {
-            // Обновление существующего пользователя
-            userData.id = userId;
-            response = await fetch(`${API_BASE_URL}/users`, {
-                method: 'PUT',
+        // Добавляем обработчики для новых кнопок
+        document.querySelectorAll('.edit-user').forEach(btn => {
+            btn.addEventListener('click', () => editUser(btn.dataset.id));
+        });
+
+        document.querySelectorAll('.delete-user').forEach(btn => {
+            btn.addEventListener('click', () => deleteUser(btn.dataset.id));
+        });
+    }
+
+    async function handleUserSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const userId = form.querySelector('#user-id').value;
+
+        const userData = {
+            email: form.querySelector('#user-email').value,
+            login: form.querySelector('#user-login').value,
+            name: form.querySelector('#user-name').value || form.querySelector('#user-login').value,
+            birthday: form.querySelector('#user-birthday').value,
+        };
+
+        try {
+            const url = userId ? `${API_BASE_URL}/users/${userId}` : `${API_BASE_URL}/users`;
+            const method = userId ? 'PUT' : 'POST';
+
+            if (userId) userData.id = userId;
+
+            const response = await fetch(url, {
+                method: method,
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(userData),
             });
-        } else {
-            // Создание нового пользователя
-            response = await fetch(`${API_BASE_URL}/users`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(userData),
-            });
-        }
 
-        if (response.ok) {
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
             form.reset();
             fetchUsers();
-        } else {
-            console.error('Ошибка при сохранении пользователя');
+            showSuccess(userId ? 'Пользователь обновлен' : 'Пользователь создан');
+        } catch (error) {
+            console.error('Ошибка при сохранении пользователя:', error);
+            showError('Ошибка при сохранении пользователя');
         }
-    } catch (error) {
-        console.error('Ошибка:', error);
     }
-}
 
-// Функции для работы с жанрами и рейтингами
-async function fetchGenres() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/genres`);
-        const genres = await response.json();
-        renderGenres(genres);
-    } catch (error) {
-        console.error('Ошибка при загрузке жанров:', error);
+    // Функции для работы с жанрами и рейтингами
+    async function fetchGenres() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/genres`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const genres = await response.json();
+            renderGenres(genres);
+        } catch (error) {
+            console.error('Ошибка при загрузке жанров:', error);
+            showError('Ошибка при загрузке жанров');
+        }
     }
-}
 
-function renderGenres(genres) {
-    const genresList = document.getElementById('genres-list');
-    genresList.innerHTML = '';
+    function renderGenres(genres) {
+        const genresList = document.getElementById('genres-list');
+        genresList.innerHTML = '';
 
-    genres.forEach(genre => {
-        const genreCard = document.createElement('div');
-        genreCard.className = 'item-card';
-        genreCard.innerHTML = `
-            <h3>${genre.name}</h3>
-            <p>ID: ${genre.id}</p>
-        `;
-        genresList.appendChild(genreCard);
-    });
-}
+        if (!genres || genres.length === 0) {
+            genresList.innerHTML = '<p>Нет доступных жанров</p>';
+            return;
+        }
 
-async function fetchMpaRatings() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/mpa`);
-        const mpaRatings = await response.json();
-        renderMpaRatings(mpaRatings);
-    } catch (error) {
-        console.error('Ошибка при загрузке рейтингов:', error);
+        genres.forEach(genre => {
+            const genreCard = document.createElement('div');
+            genreCard.className = 'item-card';
+            genreCard.innerHTML = `
+                <h3>${genre.name}</h3>
+                <p>ID: ${genre.id}</p>
+            `;
+            genresList.appendChild(genreCard);
+        });
     }
-}
 
-function renderMpaRatings(mpaRatings) {
-    const mpaList = document.getElementById('mpa-list');
-    mpaList.innerHTML = '';
+    async function fetchMpaRatings() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/mpa`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const mpaRatings = await response.json();
+            renderMpaRatings(mpaRatings);
+        } catch (error) {
+            console.error('Ошибка при загрузке рейтингов:', error);
+            showError('Ошибка при загрузке рейтингов');
+        }
+    }
 
-    mpaRatings.forEach(mpa => {
-        const mpaCard = document.createElement('div');
-        mpaCard.className = 'item-card';
-        mpaCard.innerHTML = `
-            <h3>${mpa.name}</h3>
-            <p>ID: ${mpa.id}</p>
-        `;
-        mpaList.appendChild(mpaCard);
-    });
-}
+    function renderMpaRatings(mpaRatings) {
+        const mpaList = document.getElementById('mpa-list');
+        mpaList.innerHTML = '';
 
-// Вспомогательные функции
-function editFilm(id) {
-    // Реализация заполнения формы для редактирования фильма
-    console.log('Редактирование фильма с ID:', id);
-}
+        if (!mpaRatings || mpaRatings.length === 0) {
+            mpaList.innerHTML = '<p>Нет доступных рейтингов</p>';
+            return;
+        }
 
-function deleteFilm(id) {
-    if (confirm('Вы уверены, что хотите удалить этот фильм?')) {
-        fetch(`${API_BASE_URL}/films/${id}`, {
-            method: 'DELETE',
-        })
+        mpaRatings.forEach(mpa => {
+            const mpaCard = document.createElement('div');
+            mpaCard.className = 'item-card';
+            mpaCard.innerHTML = `
+                <h3>${mpa.name}</h3>
+                <p>ID: ${mpa.id}</p>
+            `;
+            mpaList.appendChild(mpaCard);
+        });
+    }
+
+    // Вспомогательные функции
+    function editFilm(id) {
+        fetch(`${API_BASE_URL}/films/${id}`)
             .then(response => {
-                if (response.ok) {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
+            })
+            .then(film => {
+                const form = document.getElementById('film-form');
+                form.querySelector('#film-id').value = film.id;
+                form.querySelector('#film-name').value = film.name;
+                form.querySelector('#film-description').value = film.description || '';
+                form.querySelector('#film-release-date').value = film.releaseDate;
+                form.querySelector('#film-duration').value = film.duration;
+
+                // Прокручиваем к форме
+                form.scrollIntoView({ behavior: 'smooth' });
+            })
+            .catch(error => {
+                console.error('Ошибка при загрузке фильма:', error);
+                showError('Ошибка при загрузке фильма для редактирования');
+            });
+    }
+
+    function deleteFilm(id) {
+        if (confirm('Вы уверены, что хотите удалить этот фильм?')) {
+            fetch(`${API_BASE_URL}/films/${id}`, {
+                method: 'DELETE',
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     fetchFilms();
-                }
-            })
-            .catch(error => console.error('Ошибка:', error));
+                    showSuccess('Фильм удален');
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    showError('Ошибка при удалении фильма');
+                });
+        }
     }
-}
 
-function editUser(id) {
-    // Реализация заполнения формы для редактирования пользователя
-    console.log('Редактирование пользователя с ID:', id);
-}
-
-function deleteUser(id) {
-    if (confirm('Вы уверены, что хотите удалить этого пользователя?')) {
-        fetch(`${API_BASE_URL}/users/${id}`, {
-            method: 'DELETE',
-        })
+    function editUser(id) {
+        fetch(`${API_BASE_URL}/users/${id}`)
             .then(response => {
-                if (response.ok) {
-                    fetchUsers();
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
             })
-            .catch(error => console.error('Ошибка:', error));
+            .then(user => {
+                const form = document.getElementById('user-form');
+                form.querySelector('#user-id').value = user.id;
+                form.querySelector('#user-email').value = user.email;
+                form.querySelector('#user-login').value = user.login;
+                form.querySelector('#user-name').value = user.name || '';
+                form.querySelector('#user-birthday').value = user.birthday || '';
+
+                // Прокручиваем к форме
+                form.scrollIntoView({ behavior: 'smooth' });
+            })
+            .catch(error => {
+                console.error('Ошибка при загрузке пользователя:', error);
+                showError('Ошибка при загрузке пользователя для редактирования');
+            });
     }
-}
+
+    function deleteUser(id) {
+        if (confirm('Вы уверены, что хотите удалить этого пользователя?')) {
+            fetch(`${API_BASE_URL}/users/${id}`, {
+                method: 'DELETE',
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    fetchUsers();
+                    showSuccess('Пользователь удален');
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    showError('Ошибка при удалении пользователя');
+                });
+        }
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return null;
+        const date = new Date(dateString);
+        return date.toLocaleDateString();
+    }
+
+    function showError(message) {
+        alert(`Ошибка: ${message}`);
+    }
+
+    function showSuccess(message) {
+        alert(`Успех: ${message}`);
+    }
+});

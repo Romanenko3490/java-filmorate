@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,10 +9,14 @@ import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
-import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.filmorate.dal.FilmRepository;
 import ru.yandex.practicum.filmorate.dal.FriendshipRepository;
+import ru.yandex.practicum.filmorate.dal.ReviewRepository;
 import ru.yandex.practicum.filmorate.dal.UserRepository;
+import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
+import ru.yandex.practicum.filmorate.dal.mappers.ReviewRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.UserDto;
@@ -24,14 +29,19 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@Slf4j
 @JdbcTest
 @AutoConfigureTestDatabase
 @Import({UserDbService.class,
         UserRepository.class,
         FriendshipRepository.class,
+        FilmRepository.class,
+        ReviewRepository.class,
+        FilmRowMapper.class,
+        ReviewRowMapper.class,
         UserRowMapper.class})
 @Sql(scripts = {"/schema.sql", "/test-data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-class UserDbServiceTest {
+class UsersTest {
 
     @Autowired
     private UserDbService userDbService;
@@ -40,21 +50,32 @@ class UserDbServiceTest {
     private JdbcTemplate jdbcTemplate;
 
     private NewUserRequest newUserRequest;
-    private UpdateUserRequest updateUserRequest;
 
     @BeforeEach
     void setUp() {
-        // Полная очистка всех связанных таблиц
+        // Очищаем только таблицы, которые не содержат тестовых данных
         jdbcTemplate.update("DELETE FROM friendship");
-        jdbcTemplate.update("DELETE FROM users");
-        jdbcTemplate.update("DELETE FROM films"); // если есть связи
+        jdbcTemplate.update("DELETE FROM film_likes");
+        jdbcTemplate.update("DELETE FROM reviews");
+        jdbcTemplate.update("DELETE FROM films");
 
-        // Инициализация тестовых данных
+
+        // Инициализация тестовых данных для других тестов
         newUserRequest = new NewUserRequest();
         newUserRequest.setEmail("test@example.com");
         newUserRequest.setLogin("testlogin");
         newUserRequest.setName("Test User");
         newUserRequest.setBirthday(LocalDate.of(1990, 1, 1));
+    }
+
+    @BeforeEach
+    void checkTestData() {
+        Integer userCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users", Integer.class);
+        Integer filmCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM films", Integer.class);
+        Integer likeCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM film_likes", Integer.class);
+
+        log.info("Test data: {} users, {} films, {} likes", userCount, filmCount, likeCount);
+        System.out.println("userCount: " + userCount + ", filmCount: " + filmCount + ", likeCount: " + likeCount);
     }
 
     @Test
@@ -72,7 +93,6 @@ class UserDbServiceTest {
     }
 
     @Test
-    @Transactional
     void shouldUpdateUser() {
         UserDto createdUser = userDbService.createUser(newUserRequest);
 
@@ -96,6 +116,7 @@ class UserDbServiceTest {
 
     @Test
     void shouldGetAllUsers() {
+        jdbcTemplate.update("DELETE FROM users");
         userDbService.createUser(newUserRequest);
 
         newUserRequest.setEmail("another@example.com");
@@ -205,6 +226,7 @@ class UserDbServiceTest {
                 .isZero();
     }
 
+    @Test
     void shouldDeleteUserWithReviewsAndLikes() {
         UserDto user = userDbService.createUser(newUserRequest);
 
@@ -256,7 +278,54 @@ class UserDbServiceTest {
                 "SELECT COUNT(*) FROM reviews WHERE user_id = ?",
                 Integer.class,
                 userId);
-        return count == null ? count : 0;
+        return count != null ? count : 0;
+    }
+
+    @Test
+    void shouldReturnMultipleRecommendationsInCorrectOrder() {
+        // Очистка данных
+        jdbcTemplate.update("DELETE FROM film_likes");
+        jdbcTemplate.update("DELETE FROM films");
+        jdbcTemplate.update("DELETE FROM users");
+
+        // Добавление пользователей
+        jdbcTemplate.update("INSERT INTO users (user_id, email, login, name, birthday) VALUES (1, 'user1@example.com', 'login1', 'User One', '1990-01-01')");
+        jdbcTemplate.update("INSERT INTO users (user_id, email, login, name, birthday) VALUES (2, 'user2@example.com', 'login2', 'User Two', '1995-01-01')");
+        jdbcTemplate.update("INSERT INTO users (user_id, email, login, name, birthday) VALUES (3, 'user3@example.com', 'login3', 'User Three', '2000-01-01')");
+
+        // Добавление фильмов
+        jdbcTemplate.update("INSERT INTO films (film_id, name, description, release_date, duration, mpa_rating_id) VALUES (1, 'Film 1', 'Description 1', CURRENT_DATE, 120, 1)");
+        jdbcTemplate.update("INSERT INTO films (film_id, name, description, release_date, duration, mpa_rating_id) VALUES (2, 'Film 2', 'Description 2', CURRENT_DATE, 90, 2)");
+        jdbcTemplate.update("INSERT INTO films (film_id, name, description, release_date, duration, mpa_rating_id) VALUES (3, 'Film 3', 'Description 3', CURRENT_DATE, 150, 3)");
+        jdbcTemplate.update("INSERT INTO films (film_id, name, description, release_date, duration, mpa_rating_id) VALUES (4, 'Film 4', 'Description 4', CURRENT_DATE, 100, 4)");
+
+        // Добавление лайков
+        jdbcTemplate.update("INSERT INTO film_likes (film_id, user_id) VALUES (1, 1)");
+        jdbcTemplate.update("INSERT INTO film_likes (film_id, user_id) VALUES (2, 1)");
+        jdbcTemplate.update("INSERT INTO film_likes (film_id, user_id) VALUES (1, 2)");
+        jdbcTemplate.update("INSERT INTO film_likes (film_id, user_id) VALUES (3, 2)");
+        jdbcTemplate.update("INSERT INTO film_likes (film_id, user_id) VALUES (4, 2)");
+        jdbcTemplate.update("INSERT INTO film_likes (film_id, user_id) VALUES (3, 3)");
+
+        List<FilmDto> recommendations = userDbService.getRecommendations(1);
+
+        assertThat(recommendations)
+                .as("Проверка рекомендаций для User1")
+                .hasSize(2)
+                .extracting(FilmDto::getId)
+                .containsExactly(3L, 4L); // Ожидаемый порядок рекомендаций
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenNoRecommendations() {
+        jdbcTemplate.update("INSERT INTO films (film_id, name, description, release_date, duration, mpa_rating_id) " +
+                "VALUES (?, ?, ?, ?, ?, ?)", 1, "Film 1", "Description 1", LocalDate.now(), 120, 1);
+
+        jdbcTemplate.update("INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)", 1, 1);
+
+        List<FilmDto> recommendations = userDbService.getRecommendations(1);
+
+        assertThat(recommendations).isEmpty();
     }
 
 }

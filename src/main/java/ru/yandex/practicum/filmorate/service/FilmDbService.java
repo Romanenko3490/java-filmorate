@@ -93,7 +93,6 @@ public class FilmDbService {
     }
 
     public FilmDto addLike(long filmId, long userId) {
-        // Проверяем существование фильма и пользователя
         filmRepository.getFilmById(filmId)
                 .orElseThrow(() -> new NotFoundException("Film not found"));
         userRepository.getUser(userId)

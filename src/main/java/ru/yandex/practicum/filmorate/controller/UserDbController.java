@@ -6,10 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.dto.FeedEventDto;
-import ru.yandex.practicum.filmorate.dto.NewUserRequest;
-import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
-import ru.yandex.practicum.filmorate.dto.UserDto;
+import ru.yandex.practicum.filmorate.dto.*;
 import ru.yandex.practicum.filmorate.service.FeedService;
 import ru.yandex.practicum.filmorate.service.UserDbService;
 
@@ -87,5 +84,10 @@ public class UserDbController {
         return feedService.getFeedByUserId(userId);
     }
 
+    //Recommendations
+    @GetMapping("/{userId}/recommendations")
+    public List<FilmDto> getRecommendations(@PathVariable long userId) {
+        return userDbService.getRecommendations(userId);
+    }
 
 }

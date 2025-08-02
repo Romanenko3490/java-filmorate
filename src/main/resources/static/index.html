@@ -16,6 +16,7 @@
             <li><a href="#" data-page="reviews">Отзывы</a></li>
             <li><a href="#" data-page="genres">Жанры</a></li>
             <li><a href="#" data-page="mpa">Рейтинги</a></li>
+            <li><a href="#" data-page="feed">Лента событий</a></li>
         </ul>
     </nav>
 </header>
@@ -30,12 +31,61 @@
         <div class="film-form">
             <h3>Добавить/обновить фильм</h3>
             <form id="film-form">
-                <input type="number" id="film-id" placeholder="ID (для обновления)">
-                <input type="text" id="film-name" placeholder="Название" required>
-                <textarea id="film-description" placeholder="Описание"></textarea>
-                <input type="date" id="film-release-date" required>
-                <input type="number" id="film-duration" placeholder="Длительность (мин)" required>
-                <button type="submit">Сохранить</button>
+                <div class="form-row">
+                    <input type="hidden" id="film-id">
+                    <label for="film-name">Название фильма</label>
+                    <input type="text" id="film-name" placeholder="Введите название фильма" required>
+                </div>
+
+                <div class="form-row">
+                    <label for="film-description">Описание</label>
+                    <textarea id="film-description" placeholder="Введите описание фильма" rows="3"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <label for="film-release-date">Дата выхода</label>
+                    <input
+                            type="date"
+                            id="film-release-date"
+                            required
+                            pattern="\d{4}-\d{2}-\d{2}"
+                            title="Пожалуйста, введите дату в формате ГГГГ-ММ-ДД"
+                    >
+                    <small class="hint">Формат: ГГГГ-ММ-ДД (например, 1999-12-31)</small>
+                </div>
+
+                <div class="form-row">
+                    <label for="film-duration">Длительность (минут)</label>
+                    <input type="number" id="film-duration" placeholder="Введите длительность фильма" min="1" required>
+                </div>
+
+                <div class="form-row">
+                    <label>Возрастной рейтинг</label>
+                    <div class="dropdown">
+                        <button type="button" class="dropdown-toggle" id="mpa-dropdown">
+                            <span id="mpa-selected-text">Выберите рейтинг</span>
+                            <span class="arrow">▼</span>
+                        </button>
+                        <div class="dropdown-menu" id="mpa-menu"></div>
+                    </div>
+                    <div id="selected-mpa" class="selected-tag"></div>
+                </div>
+
+                <div class="form-row">
+                    <label>Жанры</label>
+                    <div class="dropdown">
+                        <button type="button" class="dropdown-toggle" id="genre-dropdown">
+                            <span id="genre-selected-text">Выберите жанры</span>
+                            <span class="arrow">▼</span>
+                        </button>
+                        <div class="dropdown-menu" id="genre-menu"></div>
+                    </div>
+                    <div id="selected-genres" class="selected-tags"></div>
+                </div>
+
+                <div class="form-row">
+                    <button type="submit">Сохранить фильм</button>
+                </div>
             </form>
         </div>
         <div id="films-list" class="items-list"></div>
@@ -45,24 +95,110 @@
         <h2>Пользователи</h2>
         <div class="controls">
             <button id="get-users">Получить всех пользователей</button>
+            <button id="get-friends">Показать друзей</button>
+            <button id="get-recommendations">Рекомендации</button>
         </div>
         <div class="user-form">
             <h3>Добавить/обновить пользователя</h3>
             <form id="user-form">
-                <input type="number" id="user-id" placeholder="ID (для обновления)">
-                <input type="email" id="user-email" placeholder="Email" required>
-                <input type="text" id="user-login" placeholder="Логин" required>
-                <input type="text" id="user-name" placeholder="Имя">
-                <input type="date" id="user-birthday">
-                <button type="submit">Сохранить</button>
+                <input type="hidden" id="user-id">
+                <div class="form-row">
+                    <label for="user-email">Email</label>
+                    <input type="email" id="user-email" placeholder="Введите email" required>
+                </div>
+                <div class="form-row">
+                    <label for="user-login">Логин</label>
+                    <input type="text" id="user-login" placeholder="Введите логин" required>
+                    <small class="hint">Логин не должен содержать пробелов</small>
+                </div>
+                <div class="form-row">
+                    <label for="user-name">Имя</label>
+                    <input type="text" id="user-name" placeholder="Введите имя (необязательно)">
+                </div>
+                <div class="form-row">
+                    <label for="user-birthday">Дата рождения</label>
+                    <input type="date" id="user-birthday">
+                </div>
+                <div class="form-row">
+                    <button type="submit">Сохранить пользователя</button>
+                </div>
             </form>
         </div>
         <div id="users-list" class="items-list"></div>
+        <div id="recommendations-list" class="items-list" style="display: none;">
+            <h3>Рекомендуемые фильмы</h3>
+            <div class="recommendations-container"></div>
+            <button id="close-recommendations">Закрыть рекомендации</button>
+        </div>
+
+        <!-- Модальное окно друзей -->
+        <div id="friends-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h3>Друзья пользователя</h3>
+                <div id="friends-list" class="items-list"></div>
+                <div class="add-friend-form">
+                    <h4>Добавить друга</h4>
+                    <input type="number" id="friend-id" placeholder="Введите ID друга">
+                    <button id="add-friend-btn">Добавить</button>
+                </div>
+            </div>
+        </div>
     </section>
 
     <section id="reviews" class="page">
         <h2>Отзывы</h2>
+        <div class="controls">
+            <button id="get-reviews">Получить все отзывы</button>
+            <button id="get-film-reviews">Отзывы к фильму</button>
+        </div>
+        <div class="review-form">
+            <h3>Добавить/обновить отзыв</h3>
+            <form id="review-form">
+                <input type="hidden" id="review-id">
+                <div class="form-row">
+                    <label for="review-film-id">ID фильма</label>
+                    <input type="number" id="review-film-id" placeholder="Введите ID фильма" required>
+                </div>
+                <div class="form-row">
+                    <label for="review-user-id">ID пользователя</label>
+                    <input type="number" id="review-user-id" placeholder="Введите ID пользователя" required>
+                </div>
+                <div class="form-row">
+                    <label for="review-content">Текст отзыва</label>
+                    <textarea id="review-content" placeholder="Введите текст отзыва" rows="3" required></textarea>
+                </div>
+                <div class="form-row">
+                    <label>Оценка</label>
+                    <div class="rating-toggle">
+                        <input type="radio" id="review-positive" name="review-rating" value="true" checked>
+                        <label for="review-positive">Положительный</label>
+                        <input type="radio" id="review-negative" name="review-rating" value="false">
+                        <label for="review-negative">Отрицательный</label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <button type="submit">Сохранить отзыв</button>
+                </div>
+            </form>
+        </div>
         <div id="reviews-list" class="items-list"></div>
+
+        <!-- Модальное окно для лайков отзывов -->
+        <div id="review-actions-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h3>Действия с отзывом</h3>
+                <div class="review-actions">
+                    <button id="like-review-btn">Лайк</button>
+                    <button id="dislike-review-btn">Дизлайк</button>
+                    <button id="remove-like-review-btn">Удалить лайк</button>
+                    <button id="remove-dislike-review-btn">Удалить дизлайк</button>
+                </div>
+                <input type="hidden" id="current-review-id">
+                <input type="hidden" id="current-review-user-id">
+            </div>
+        </div>
     </section>
 
     <section id="genres" class="page">
@@ -74,6 +210,25 @@
         <h2>Рейтинги</h2>
         <div id="mpa-list" class="items-list"></div>
     </section>
+
+    <section id="feed" class="page">
+        <h2>Лента событий</h2>
+        <div class="feed-form">
+            <form id="feed-form">
+                <div class="form-row">
+                    <label for="feed-user-id">ID пользователя</label>
+                    <input type="number" id="feed-user-id" placeholder="Введите ID пользователя" required min="1">
+                </div>
+                <div class="form-row">
+                    <button type="submit">Показать ленту</button>
+                </div>
+            </form>
+        </div>
+        <div id="feed-list" class="items-list">
+            <!-- Здесь будет отображаться лента -->
+        </div>
+    </section>
+
 </main>
 
 <script src="js/app.js"></script>

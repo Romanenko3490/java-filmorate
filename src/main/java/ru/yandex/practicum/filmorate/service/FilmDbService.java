@@ -166,4 +166,32 @@ public class FilmDbService {
                 .collect(Collectors.toList());
     }
 
+    // Поиск
+    public List<FilmDto> searchFilms(String query, String by) {
+        log.info("Searching films with query: '{}', by: '{}'", query, by);
+
+        if (query == null || query.trim().isEmpty()) {
+            log.warn("Search query is empty or null");
+            return List.of();
+        }
+
+        // Валидация параметра by
+        if (by != null && !by.trim().isEmpty()) {
+            String[] searchTypes = by.split(",");
+            for (String searchType : searchTypes) {
+                String trimmedType = searchType.trim();
+                if (!trimmedType.equals("title") && !trimmedType.equals("director")) {
+                    throw new ValidationException("Invalid search parameter: " + trimmedType +
+                            ". Allowed values: 'title', 'director'");
+                }
+            }
+        }
+
+        List<Film> films = filmRepository.searchFilms(query, by);
+
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
+    }
+
 }

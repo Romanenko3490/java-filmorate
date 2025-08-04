@@ -4,6 +4,13 @@ import lombok.Data;
 
 @Data
 public class MpaDto {
-    private Integer id;
-    private String name;
+    private Long id;
+
+    public MpaDto() {
+    }
+
+    public MpaDto(Long id) {
+        this.id = id;
+    }
+
 }

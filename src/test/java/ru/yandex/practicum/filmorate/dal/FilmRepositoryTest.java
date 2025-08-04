@@ -47,7 +47,7 @@ class FilmRepositoryTest {
         testFilm.setLikes(new HashSet<>());
 
         MpaRating mpa = new MpaRating();
-        mpa.setId(1);
+        mpa.setId(1L);
         testFilm.setMpa(mpa);
 
         Set<Genre> genres = new HashSet<>();
@@ -107,7 +107,7 @@ class FilmRepositoryTest {
         anotherFilm.setDuration(90);
         anotherFilm.setLikes(new HashSet<>());
         MpaRating mpa = new MpaRating();
-        mpa.setId(2);
+        mpa.setId(2L);
         anotherFilm.setMpa(mpa);
         filmRepository.addFilm(anotherFilm);
 
@@ -151,7 +151,7 @@ class FilmRepositoryTest {
         film2.setDuration(90);
         film2.setLikes(new HashSet<>());
         MpaRating mpa = new MpaRating();
-        mpa.setId(2);
+        mpa.setId(2L);
         film2.setMpa(mpa);
         film2 = filmRepository.addFilm(film2);
 
@@ -176,7 +176,7 @@ class FilmRepositoryTest {
             film.setDuration(120);
 
             MpaRating mpa = new MpaRating();
-            mpa.setId(1);
+            mpa.setId(1L);
             film.setMpa(mpa);
 
 

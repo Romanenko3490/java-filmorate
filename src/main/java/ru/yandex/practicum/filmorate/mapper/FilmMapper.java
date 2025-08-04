@@ -1,9 +1,10 @@
-package ru.yandex.practicum.filmorate.mapper;
+ package ru.yandex.practicum.filmorate.mapper;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.MpaDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.model.film.Film;
@@ -34,11 +35,11 @@ public class FilmMapper {
         filmDto.setDescription(film.getDescription());
         filmDto.setDuration(film.getDuration());
         if (film.getGenres() != null) {
-            filmDto.setGenres(film.getGenres().stream().map(Genre::getId).sorted().collect(Collectors.toList()));
+            filmDto.setGenres(film.getGenres());
         }
         filmDto.setReleaseDate(film.getReleaseDate());
         if (film.getMpa() != null) {
-            filmDto.setMpa(film.getMpa().getId());
+            filmDto.setMpa(film.getMpa());
         }
         if (film.getDirectors() != null) {
             filmDto.setDirectors(film.getDirectors());

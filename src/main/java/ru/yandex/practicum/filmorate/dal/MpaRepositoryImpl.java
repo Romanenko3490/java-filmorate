@@ -21,7 +21,7 @@ public class MpaRepositoryImpl extends BaseRepository<MpaRating> implements MpaR
     public MpaRepositoryImpl(JdbcTemplate jdbc, Checker checker) {
         super(jdbc, (rs, rowNum) -> {
             MpaRating mpa = new MpaRating();
-            mpa.setId(rs.getInt("mpa_id"));
+            mpa.setId(rs.getLong("mpa_id"));
             mpa.setName(rs.getString("mpa_name"));
             mpa.setDescription(rs.getString("description"));
             return mpa;
@@ -29,12 +29,13 @@ public class MpaRepositoryImpl extends BaseRepository<MpaRating> implements MpaR
     }
 
     @Override
-    public boolean existsById(int mpaId) {
+    public boolean existsById(Long mpaId) {
         return super.existsById(EXISTS_BY_ID_QUERY, mpaId);
     }
 
+
     @Override
-    public Optional<MpaRating> findById(int mpaId) {
+    public Optional<MpaRating> findById(Long mpaId) {
         log.debug("Getting MPA rating by id: {}", mpaId);
         return super.findById(FIND_BY_ID_QUERY, mpaId);
     }

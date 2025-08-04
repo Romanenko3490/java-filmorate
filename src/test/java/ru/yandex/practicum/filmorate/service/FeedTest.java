@@ -108,7 +108,7 @@ class FeedTest {
         filmRequest.setReleaseDate(LocalDate.of(2000, 1, 1));
         filmRequest.setDuration(120);
         MpaRating mpa = new MpaRating();
-        mpa.setId(1);
+        mpa.setId(1L);
         filmRequest.setMpa(mpa);
         return filmDbService.addFilm(filmRequest).getId();
     }

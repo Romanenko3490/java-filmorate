@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.dto;
 
 import lombok.Data;
 import ru.yandex.practicum.filmorate.model.film.Director;
+import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.model.film.Genre;
 import ru.yandex.practicum.filmorate.model.film.MpaRating;
 
@@ -17,8 +18,8 @@ public class FilmDto {
     private String description;
     private LocalDate releaseDate;
     private Integer duration;
-    private List<Long> genres;
-    private Integer mpa;
+    private List<GenreDto> genres;
+    private MpaDto mpa;
     private Set<Director> directors;
 
 
@@ -39,10 +40,21 @@ public class FilmDto {
         this.releaseDate = releaseDate;
         this.duration = duration;
         this.genres = genres.stream()
-                .map(Genre::getId)
-                .sorted()
+                .map(genre -> new GenreDto(genre.getId()))
+                .sorted((g1, g2) -> Long.compare(g1.getId(), g2.getId()))
                 .collect(Collectors.toList());
-        this.mpa = mpa.getId();
+        this.mpa = new MpaDto(mpa.getId());
         this.directors = directors;
+    }
+
+    public void setGenres(Set<Genre> genres) {
+        this.genres = genres.stream()
+                .map(genre -> new GenreDto(genre.getId()))
+                .sorted((g1, g2) -> Long.compare(g1.getId(), g2.getId()))
+                .collect(Collectors.toList());
+    }
+
+    public void setMpa(MpaRating mpa) {
+        this.mpa = new MpaDto(mpa.getId());
     }
 }

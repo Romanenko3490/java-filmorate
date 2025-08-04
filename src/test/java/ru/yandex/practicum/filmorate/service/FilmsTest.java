@@ -63,7 +63,7 @@ class FilmsTest {
         newFilmRequest.setDuration(120);
 
         MpaRating mpa = new MpaRating();
-        mpa.setId(1);
+        mpa.setId(1L);
         newFilmRequest.setMpa(mpa);
 
         updateFilmRequest = new UpdateFilmRequest();
@@ -85,7 +85,7 @@ class FilmsTest {
         assertThat(retrievedFilm.getName()).isEqualTo("Test Film");
         assertThat(retrievedFilm.getDescription()).isEqualTo("Test Description");
         assertThat(retrievedFilm.getDuration()).isEqualTo(120);
-        assertThat(retrievedFilm.getMpa()).isEqualTo(1);
+        assertThat(retrievedFilm.getMpa()).isEqualTo(addedFilm.getMpa());
     }
 
     @Test
@@ -110,7 +110,7 @@ class FilmsTest {
         anotherFilm.setReleaseDate(LocalDate.of(2001, 1, 1));
         anotherFilm.setDuration(90);
         MpaRating mpa = new MpaRating();
-        mpa.setId(2);
+        mpa.setId(2L);
         anotherFilm.setMpa(mpa);
         filmDbService.addFilm(anotherFilm);
 
@@ -158,7 +158,7 @@ class FilmsTest {
         anotherFilm.setReleaseDate(LocalDate.of(2001, 1, 1));
         anotherFilm.setDuration(90);
         MpaRating mpa = new MpaRating();
-        mpa.setId(2);
+        mpa.setId(2L);
         anotherFilm.setMpa(mpa);
         FilmDto film2 = filmDbService.addFilm(anotherFilm);
 
@@ -179,7 +179,7 @@ class FilmsTest {
 
     @Test
     void shouldThrowWhenMpaNotFound() {
-        newFilmRequest.getMpa().setId(999);
+        newFilmRequest.getMpa().setId(999L);
         assertThrows(NotFoundException.class, () -> filmDbService.addFilm(newFilmRequest));
     }
 
@@ -232,7 +232,7 @@ class FilmsTest {
         anotherFilm.setReleaseDate(LocalDate.of(2001, 1, 1));
         anotherFilm.setDuration(90);
         MpaRating mpa = new MpaRating();
-        mpa.setId(2);
+        mpa.setId(2L);
         anotherFilm.setMpa(mpa);
         FilmDto film2 = filmDbService.addFilm(anotherFilm);
 

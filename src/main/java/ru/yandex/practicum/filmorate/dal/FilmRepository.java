@@ -359,7 +359,11 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             genre.setName(rs.getString("name"));
             return genre;
         }, film.getId());
-        film.setGenres(new LinkedHashSet<>(genres));
+        Set<Genre> sortedGenres = genres.stream()
+                .sorted(Comparator.comparing(Genre::getId))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        film.setGenres(sortedGenres);
     }
 
     private void loadGenresForFilms(Collection<Film> films) {
@@ -397,7 +401,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         });
     }
     // endregion
-
 
 
     //Director ops region

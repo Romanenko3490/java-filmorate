@@ -237,7 +237,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration(),
-                film.getGenres(),
                 film.getMpa().getId(),
                 film.getId());
 
@@ -385,7 +384,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             Film film = filmMap.get(filmId);
             if (film != null) {
                 if (film.getGenres() == null) {
-                    film.setGenres(new LinkedHashSet<>());
+                    film.setGenres(new TreeSet<>(Comparator.comparing(Genre::getId)));
                 }
                 Genre genre = new Genre();
                 genre.setId(rs.getInt("genre_id"));
@@ -397,7 +396,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         // Гарантируем, что у всех фильмов есть Set (даже пустой)
         films.forEach(film -> {
             if (film.getGenres() == null) {
-                film.setGenres(new LinkedHashSet<>());
+                film.setGenres(new TreeSet<>(Comparator.comparing(Genre::getId)));
             }
         });
     }

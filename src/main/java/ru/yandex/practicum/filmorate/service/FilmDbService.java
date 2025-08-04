@@ -115,6 +115,7 @@ public class FilmDbService {
 
         film.getLikes().remove(userId);
         filmRepository.updateFilm(film);
+        filmRepository.removeLike(filmId, userId);
         log.info("User {} removed like from film {}", userId, filmId);
         return FilmMapper.mapToFilmDto(film);
     }

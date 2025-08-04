@@ -61,44 +61,44 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private static final String GET_POPULAR_FILMS_QUERY =
             "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
                     "m.mpa_id, m.mpa_name, m.description AS mpa_description, " +
-                    "COUNT(fl.user_id) AS likes_count " +
+                    "(SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) AS likes_count " +
                     "FROM films f " +
                     "LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
-                    "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
-                    "GROUP BY f.film_id, m.mpa_id " +
                     "ORDER BY likes_count DESC, f.film_id " +
                     "LIMIT ?";
+
     private static final String CHECK_MPA_EXISTS_QUERY =
             "SELECT COUNT(*) FROM mpa_rating WHERE mpa_id = ?";
 
     private static final String GET_POPULAR_FILMS_BY_GENRE_QUERY =
             "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
-                    "m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "m.mpa_id, m.mpa_name, m.description AS mpa_description, " +
+                    "(SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) AS likes_count " +
                     "FROM films f " +
-                    "JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id\n" +
-                    "WHERE f.film_id IN (\n" +
-                    "    SELECT fg.film_id FROM film_genre fg WHERE fg.genre_id = ?\n" +
-                    ")\n" +
-                    "ORDER BY (SELECT COUNT(*) FROM film_likes fl WHERE fl.film_id = f.film_id) DESC\n" +
+                    "JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
+                    "WHERE f.film_id IN (SELECT fg.film_id FROM film_genre fg WHERE fg.genre_id = ?) " +
+                    "ORDER BY likes_count DESC " +
                     "LIMIT ?";
 
     private static final String GET_POPULAR_FILMS_BY_GENRE_AND_YEAR_QUERY =
             "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
-                    "m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "m.mpa_id, m.mpa_name, m.description AS mpa_description, " +
+                    "(SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) AS likes_count " +
                     "FROM films f " +
                     "JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
-                    "WHERE f.film_id IN (SELECT fg.film_id FROM film_genre fg WHERE fg.genre_id = ?\n" +
-                    ") AND EXTRACT(YEAR FROM f.release_date) = ?" +
-                    "ORDER BY (SELECT COUNT(*) FROM film_likes fl WHERE fl.film_id = f.film_id) DESC " +
+                    "WHERE f.film_id IN (SELECT fg.film_id FROM film_genre fg WHERE fg.genre_id = ?) " +
+                    "AND EXTRACT(YEAR FROM f.release_date) = ? " +
+                    "ORDER BY likes_count DESC " +
                     "LIMIT ?";
 
     private static final String GET_POPULAR_FILMS_BY_YEAR_QUERY =
             "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
-                    "m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "m.mpa_id, m.mpa_name, m.description AS mpa_description, " +
+                    "(SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) AS likes_count " +
                     "FROM films f " +
                     "LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
                     "WHERE EXTRACT(YEAR FROM f.release_date) = ? " +
-                    "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) DESC " +
+                    "ORDER BY likes_count DESC " +
                     "LIMIT ?";
 
     // endregion
@@ -141,17 +141,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_likes.film_id = f.film_id) DESC, f.film_id";
     // endregion
 
-    // region SQL Queries - Common Films Query
-    private static final String GET_COMMON_FILMS_QUERY =
-            "SELECT f.*, m.mpa_id, m.mpa_name, m.description AS mpa_description " +
-                    "FROM films f " +
-                    "JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
-                    "JOIN film_likes fl1 ON f.film_id = fl1.film_id " +
-                    "JOIN film_likes fl2 ON f.film_id = fl2.film_id " +
-                    "WHERE fl1.user_id = ? AND fl2.user_id = ? " +
-                    "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) DESC";
-    //endregion
-
 
     //Director Query Region
 
@@ -178,6 +167,16 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             "SELECT user_id, film_id FROM film_likes";
     private static final String GET_USER_LIKED_FILMS =
             "SELECT film_id FROM film_likes WHERE user_id = ?";
+    //endregion
+
+    // region SQL Queries - Common Films Query
+    private static final String GET_COMMON_FILMS_QUERY =
+            "SELECT f.*, m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "FROM films f " +
+                    "JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
+                    "WHERE EXISTS (SELECT 1 FROM film_likes WHERE user_id = ? AND film_id = f.film_id) " +
+                    "AND EXISTS (SELECT 1 FROM film_likes WHERE user_id = ? AND film_id = f.film_id) " +
+                    "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) DESC";
     //endregion
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
@@ -314,6 +313,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         }
     }
 
+    @Transactional
     public void removeLike(long filmId, long userId) {
         int rowsDeleted = jdbc.update(DELETE_FILM_LIKE_QUERY, filmId, userId);
         log.debug("Deleted {} rows for filmId {} and userId {}", rowsDeleted, filmId, userId);

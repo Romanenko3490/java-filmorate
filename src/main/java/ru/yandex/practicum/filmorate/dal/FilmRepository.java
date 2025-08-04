@@ -329,45 +329,37 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private void updateFilmGenres(Film film) {
         checkFilm(film.getId());
 
-        // 1. Получаем текущие жанры фильма из БД (с сортировкой)
-        Set<Genre> currentGenres = jdbc.query(
-                "SELECT genre_id, name FROM film_genre fg JOIN genre g ON fg.genre_id = g.genre_id WHERE film_id = ? ORDER BY g.genre_id",
-                (rs, rowNum) -> new Genre(rs.getLong("genre_id"), rs.getString("name")),
-                film.getId()
-        ).stream().collect(Collectors.toCollection(LinkedHashSet::new));
-
-        // 2. Обработка случая с пустым списком жанров
-        if (film.getGenres() == null) {
-            jdbc.update("DELETE FROM film_genre WHERE film_id = ?", film.getId());
-            film.setGenres(null); // Явно устанавливаем null
-            return;
-        }
-
-        // 3. Если пришел пустой список - очищаем жанры
-        if (film.getGenres().isEmpty()) {
-            jdbc.update("DELETE FROM film_genre WHERE film_id = ?", film.getId());
-            film.setGenres(Collections.emptySet());
-            return;
-        }
-
-        // 4. Объединяем жанры (сохраняем порядок)
-        Set<Genre> mergedGenres = new LinkedHashSet<>(currentGenres);
-        mergedGenres.addAll(film.getGenres()); // Добавляем новые жанры
-
-        // 5. Полная перезапись с сохранением порядка
+        // Всегда сначала удаляем все текущие жанры
         jdbc.update("DELETE FROM film_genre WHERE film_id = ?", film.getId());
 
-        List<Object[]> batchArgs = mergedGenres.stream()
-                .sorted(Comparator.comparing(Genre::getId))
-                .map(genre -> new Object[]{film.getId(), genre.getId()})
-                .collect(Collectors.toList());
+        // Если genres не null и не пустой - добавляем новые
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            List<Object[]> batchArgs = film.getGenres().stream()
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .sorted(Comparator.comparing(Genre::getId))
+                    .map(genre -> new Object[]{film.getId(), genre.getId()})
+                    .collect(Collectors.toList());
 
-        jdbc.batchUpdate("INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)", batchArgs);
+            if (!batchArgs.isEmpty()) {
+                jdbc.batchUpdate("INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)", batchArgs);
+            }
+        }
 
-        // Обновляем поле genres у фильма
-        film.setGenres(mergedGenres.stream()
-                .sorted(Comparator.comparing(Genre::getId))
-                .collect(Collectors.toCollection(LinkedHashSet::new)));
+        // Обновляем поле genres у объекта Film
+        if (film.getGenres() == null) {
+            film.setGenres(null);
+        } else {
+            Set<Genre> updatedGenres = jdbc.query(
+                    "SELECT g.genre_id, g.name FROM film_genre fg " +
+                            "JOIN genre g ON fg.genre_id = g.genre_id " +
+                            "WHERE fg.film_id = ? ORDER BY g.genre_id",
+                    (rs, rowNum) -> new Genre(rs.getLong("genre_id"), rs.getString("name")),
+                    film.getId()
+            ).stream().collect(Collectors.toCollection(LinkedHashSet::new));
+
+            film.setGenres(updatedGenres.isEmpty() ? null : updatedGenres);
+        }
     }
 
     private void updateFilmDirector(Film film) {

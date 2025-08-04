@@ -8,8 +8,10 @@ import ru.yandex.practicum.filmorate.dto.GenreDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.model.film.Film;
+import ru.yandex.practicum.filmorate.model.film.MpaRating;
 
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,22 +46,26 @@ public class FilmMapper {
         filmDto.setDuration(film.getDuration());
         filmDto.setReleaseDate(film.getReleaseDate());
 
-        // Обработка жанров - всегда возвращаем Set, даже если пустой
-        Set<GenreDto> genreDtos = film.getGenres().stream()
-                .map(genre -> new GenreDto(genre.getId(), genre.getName()))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-        filmDto.setGenresFromDto(genreDtos);
+        // Обработка жанров с проверкой на null
+        if (film.getGenres() != null) {
+            Set<GenreDto> genreDtos = film.getGenres().stream()
+                    .filter(Objects::nonNull)
+                    .map(genre -> new GenreDto(genre.getId(), genre.getName()))
+                    .sorted()
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+            filmDto.setGenresFromDto(genreDtos);
+        } else {
+            filmDto.setGenresFromDto(null); // Явно устанавливаем null
+        }
 
         // Обработка MPA
         if (film.getMpa() != null) {
-            filmDto.setMpa(film.getMpa());
+            filmDto.setMpa(new MpaRating(film.getMpa().getId(), film.getMpa().getName(), film.getMpa().getDescription()));
         }
 
         // Обработка режиссеров
         if (film.getDirectors() != null) {
             filmDto.setDirectors(new LinkedHashSet<>(film.getDirectors()));
-        } else {
-            filmDto.setDirectors(new LinkedHashSet<>());
         }
 
         return filmDto;

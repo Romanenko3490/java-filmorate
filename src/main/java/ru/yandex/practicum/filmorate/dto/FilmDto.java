@@ -19,7 +19,7 @@ public class FilmDto {
     private String description;
     private LocalDate releaseDate;
     private Integer duration;
-    private Set<GenreDto> genres;
+    private Set<GenreDto> genres = new LinkedHashSet<>();
     private MpaDto mpa;
     private Set<Director> directors;
 

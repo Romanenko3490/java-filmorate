@@ -355,16 +355,16 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private void loadGenresForFilm(Film film) {
         List<Genre> genres = jdbc.query(GET_FILM_GENRES_QUERY, (rs, rowNum) -> {
             Genre genre = new Genre();
-            genre.setId(rs.getInt("genre_id"));
+            genre.setId(rs.getLong("genre_id"));
             genre.setName(rs.getString("name"));
             return genre;
         }, film.getId());
-        film.setGenres(new HashSet<>(genres));
+        film.setGenres(new LinkedHashSet<>(genres));
     }
 
     private void loadGenresForFilms(Collection<Film> films) {
-        Map<Long, Film> filmMap = new HashMap<>();
-        films.forEach(film -> filmMap.put(film.getId(), film));
+        Map<Long, Film> filmMap = films.stream()
+                .collect(Collectors.toMap(Film::getId, film -> film));
 
         if (filmMap.isEmpty()) {
             return;
@@ -379,12 +379,22 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             long filmId = rs.getLong("film_id");
             Film film = filmMap.get(filmId);
             if (film != null) {
+                if (film.getGenres() == null) {
+                    film.setGenres(new LinkedHashSet<>());
+                }
                 Genre genre = new Genre();
                 genre.setId(rs.getInt("genre_id"));
                 genre.setName(rs.getString("name"));
                 film.getGenres().add(genre);
             }
         }, filmMap.keySet().toArray());
+
+        // Гарантируем, что у всех фильмов есть Set (даже пустой)
+        films.forEach(film -> {
+            if (film.getGenres() == null) {
+                film.setGenres(new LinkedHashSet<>());
+            }
+        });
     }
     // endregion
 

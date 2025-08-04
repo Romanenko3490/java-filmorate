@@ -4,9 +4,14 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.GenreDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.model.film.Film;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -16,10 +21,17 @@ public class FilmMapper {
         film.setName(request.getName());
         film.setDescription(request.getDescription());
         film.setDuration(request.getDuration());
-        film.setGenres(request.getGenres());
         film.setReleaseDate(request.getReleaseDate());
         film.setMpa(request.getMpa());
         film.setDirectors(request.getDirectors());
+
+        // Обработка жанров
+        if (request.getGenres() != null) {
+            film.setGenres(new LinkedHashSet<>(request.getGenres()));
+        } else {
+            film.setGenres(new LinkedHashSet<>());
+        }
+
         log.info("Mapping film, mpa: {}", request.getMpa());
         return film;
     }
@@ -30,16 +42,26 @@ public class FilmMapper {
         filmDto.setName(film.getName());
         filmDto.setDescription(film.getDescription());
         filmDto.setDuration(film.getDuration());
-        if (film.getGenres() != null) {
-            filmDto.setGenres(film.getGenres());
-        }
         filmDto.setReleaseDate(film.getReleaseDate());
+
+        // Обработка жанров - всегда возвращаем Set, даже если пустой
+        Set<GenreDto> genreDtos = film.getGenres().stream()
+                .map(genre -> new GenreDto(genre.getId(), genre.getName()))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        filmDto.setGenresFromDto(genreDtos);
+
+        // Обработка MPA
         if (film.getMpa() != null) {
             filmDto.setMpa(film.getMpa());
         }
+
+        // Обработка режиссеров
         if (film.getDirectors() != null) {
-            filmDto.setDirectors(film.getDirectors());
+            filmDto.setDirectors(new LinkedHashSet<>(film.getDirectors()));
+        } else {
+            filmDto.setDirectors(new LinkedHashSet<>());
         }
+
         return filmDto;
     }
 
@@ -57,7 +79,8 @@ public class FilmMapper {
         }
 
         if (request.hasGenres()) {
-            film.setGenres(request.getGenres());
+            // Обновляем жанры только если они переданы в запросе
+            film.setGenres(new LinkedHashSet<>(request.getGenres()));
         }
 
         if (request.hasReleaseDate()) {
@@ -70,5 +93,4 @@ public class FilmMapper {
 
         return film;
     }
-
 }

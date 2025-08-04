@@ -54,6 +54,10 @@ public class FilmDto {
         }
     }
 
+    public void setGenresFromDto(Set<GenreDto> genres) {
+        this.genres = genres;
+    }
+
     public void setMpa(MpaRating mpa) {
         this.mpa = mpa != null ? new MpaDto(mpa.getId(), mpa.getName()) : null;
     }

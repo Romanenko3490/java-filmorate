@@ -38,10 +38,7 @@ public class UpdateFilmRequest {
     }
 
     public boolean hasGenres() {
-        if (genres == null || genres.isEmpty()) {
-            return false;
-        }
-        return genres.stream().allMatch(genre -> genre.getId() > 0 && genre.getId() <= 6);
+        return genres != null;
     }
 
     public boolean hasMpaRating() {

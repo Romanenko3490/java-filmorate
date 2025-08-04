@@ -12,14 +12,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.ALWAYS)
 public class FilmDto {
     private Long id;
     private String name;
     private String description;
     private LocalDate releaseDate;
     private Integer duration;
-    private Set<GenreDto> genres = new LinkedHashSet<>();
+    private Set<GenreDto> genres;
     private MpaDto mpa;
     private Set<Director> directors = new  LinkedHashSet<>();
 
@@ -56,7 +56,9 @@ public class FilmDto {
     }
 
     public void setGenresFromDto(Set<GenreDto> genres) {
-        this.genres = genres;
+        this.genres = genres != null ?
+                new LinkedHashSet<>(genres) :
+                null;
     }
 
     public void setMpa(MpaRating mpa) {

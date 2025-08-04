@@ -48,6 +48,7 @@ public class FilmMapper {
 
         // Обработка жанров с проверкой на null
         if (film.getGenres() != null) {
+            // Для пустого списка создаем пустой LinkedHashSet
             Set<GenreDto> genreDtos = film.getGenres().stream()
                     .filter(Objects::nonNull)
                     .map(genre -> new GenreDto(genre.getId(), genre.getName()))
@@ -55,7 +56,7 @@ public class FilmMapper {
                     .collect(Collectors.toCollection(LinkedHashSet::new));
             filmDto.setGenresFromDto(genreDtos);
         } else {
-            filmDto.setGenresFromDto(null); // Явно устанавливаем null
+            filmDto.setGenresFromDto(null);
         }
 
         // Обработка MPA

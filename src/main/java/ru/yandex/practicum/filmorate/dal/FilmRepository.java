@@ -329,35 +329,31 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private void updateFilmGenres(Film film) {
         checkFilm(film.getId());
 
+        // Удаляем все текущие жанры фильма
         jdbc.update("DELETE FROM film_genre WHERE film_id = ?", film.getId());
 
-        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            List<Object[]> batchArgs = film.getGenres().stream()
-                    .filter(Objects::nonNull)
-                    .distinct()
-                    .sorted(Comparator.comparing(Genre::getId))
-                    .map(genre -> new Object[]{film.getId(), genre.getId()})
-                    .collect(Collectors.toList());
+        // Если genres явно передано как пустой список - оставляем пустой список
+        if (film.getGenres() != null) {
+            // Для непустого списка добавляем жанры
+            if (!film.getGenres().isEmpty()) {
+                List<Object[]> batchArgs = film.getGenres().stream()
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .sorted(Comparator.comparing(Genre::getId))
+                        .map(genre -> new Object[]{film.getId(), genre.getId()})
+                        .collect(Collectors.toList());
 
-            if (!batchArgs.isEmpty()) {
                 jdbc.batchUpdate("INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)", batchArgs);
             }
-        }
 
-        if (film.getGenres() == null) {
-            film.setGenres(new HashSet<>());
+            // Всегда устанавливаем переданное значение (даже если это пустой список)
+            film.setGenres(film.getGenres());
         } else {
-            Set<Genre> updatedGenres = jdbc.query(
-                    "SELECT g.genre_id, g.name FROM film_genre fg " +
-                            "JOIN genre g ON fg.genre_id = g.genre_id " +
-                            "WHERE fg.film_id = ? ORDER BY g.genre_id",
-                    (rs, rowNum) -> new Genre(rs.getLong("genre_id"), rs.getString("name")),
-                    film.getId()
-            ).stream().collect(Collectors.toCollection(LinkedHashSet::new));
-
-            film.setGenres(updatedGenres.isEmpty() ? null : updatedGenres);
+            // Если genres = null - оставляем null
+            film.setGenres(null);
         }
     }
+
 
     private void updateFilmDirector(Film film) {
         checkFilm(film.getId());

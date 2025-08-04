@@ -141,6 +141,17 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_likes.film_id = f.film_id) DESC, f.film_id";
     // endregion
 
+    // region SQL Queries - Search Operations
+    private static final String GET_COMMON_FILMS_QUERY =
+            "SELECT f.*, m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "FROM films f " +
+                    "JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
+                    "JOIN film_likes fl1 ON f.film_id = fl1.film_id " +
+                    "JOIN film_likes fl2 ON f.film_id = fl2.film_id " +
+                    "WHERE fl1.user_id = ? AND fl2.user_id = ? " +
+                    "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) DESC";
+    //endregion
+
 
     //Director Query Region
 
@@ -616,6 +627,11 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
         log.debug("Found {} films for search query: '{}'", films.size(), query);
         return films;
+    }
+
+    //CommonFilms region
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        return jdbc.query(GET_COMMON_FILMS_QUERY, mapper, userId, friendId);
     }
 
 }

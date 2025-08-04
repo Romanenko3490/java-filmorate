@@ -331,7 +331,12 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         jdbc.update(DELETE_FILM_GENRES_QUERY, film.getId());
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            List<Object[]> batchArgs = film.getGenres().stream()
+            // Сортируем жанры по ID перед вставкой
+            List<Genre> sortedGenres = film.getGenres().stream()
+                    .sorted(Comparator.comparing(Genre::getId))
+                    .collect(Collectors.toList());
+
+            List<Object[]> batchArgs = sortedGenres.stream()
                     .map(genre -> new Object[]{film.getId(), genre.getId()})
                     .collect(Collectors.toList());
 
@@ -359,6 +364,8 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             genre.setName(rs.getString("name"));
             return genre;
         }, film.getId());
+
+        // Убедимся, что жанры отсортированы по ID
         Set<Genre> sortedGenres = genres.stream()
                 .sorted(Comparator.comparing(Genre::getId))
                 .collect(Collectors.toCollection(LinkedHashSet::new));

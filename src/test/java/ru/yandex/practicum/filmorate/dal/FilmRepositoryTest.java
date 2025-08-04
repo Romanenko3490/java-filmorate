@@ -52,7 +52,7 @@ class FilmRepositoryTest {
 
         Set<Genre> genres = new HashSet<>();
         Genre genre = new Genre();
-        genre.setId(1);
+        genre.setId(1L);
         genres.add(genre);
         testFilm.setGenres(genres);
     }

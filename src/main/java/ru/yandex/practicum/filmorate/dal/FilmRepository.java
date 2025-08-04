@@ -405,7 +405,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     film.setGenres(new TreeSet<>(Comparator.comparing(Genre::getId)));
                 }
                 Genre genre = new Genre();
-                genre.setId(rs.getInt("genre_id"));
+                genre.setId(rs.getLong("genre_id"));
                 genre.setName(rs.getString("name"));
                 film.getGenres().add(genre);
             }

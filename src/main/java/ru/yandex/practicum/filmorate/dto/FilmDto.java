@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.film.MpaRating;
 
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -52,15 +53,18 @@ public class FilmDto {
         }
 
         this.genres = genres.stream()
+                .filter(Objects::nonNull)
                 .collect(Collectors.toMap(
                         Genre::getId,
-                        Genre::getName,
-                        (existing, replacement) -> existing, //функция слияния.
+                        g -> g.getName() != null ? g.getName() : "",
+                        (existing, replacement) -> existing,
                         TreeMap::new
                 ));
     }
 
     public void setMpa(MpaRating mpa) {
-        this.mpa = new MpaDto(mpa.getId(), mpa.getName());
+        if (mpa == null) {
+            this.mpa = new MpaDto(mpa.getId(), mpa.getName());
+        }
     }
 }

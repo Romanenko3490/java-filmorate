@@ -1,22 +1,16 @@
 package ru.yandex.practicum.filmorate.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+// GenreDto.java
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class GenreDto {
     private Long id;
     private String name;
-
-    public GenreDto() {
-    }
-
-    public GenreDto(Long id) {
-        this.id = id;
-        this.name = null;
-    }
-
-    public GenreDto(Long id, String name) {
-        this.id = id;
-        this.name = name;
-    }
 }

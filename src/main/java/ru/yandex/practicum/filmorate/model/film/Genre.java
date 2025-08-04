@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.model.film;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.filmorate.dto.GenreDto;
 
 @Slf4j
 @Data

@@ -6,6 +6,7 @@ import lombok.Data;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 @Data
 public class Film {
@@ -24,7 +25,7 @@ public class Film {
     @Positive(message = "Film duration cannot be negative or zero")
     private Integer duration;
 
-    private Set<Genre> genres = new HashSet<>();
+    private Set<Genre> genres = new TreeSet<>();
     private MpaRating mpa;
 
     private Set<Long> likes = new HashSet<>();

@@ -9,8 +9,8 @@ import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.model.film.Film;
 
-import java.util.TreeSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -25,14 +25,13 @@ public class FilmMapper {
         film.setMpa(request.getMpa());
         film.setDirectors(request.getDirectors());
 
-        // Обработка жанров
+        // Используем TreeSet для автоматической сортировки
         if (request.getGenres() != null) {
             film.setGenres(new TreeSet<>(request.getGenres()));
         } else {
             film.setGenres(new TreeSet<>());
         }
 
-        log.info("Mapping film, mpa: {}", request.getMpa());
         return film;
     }
 
@@ -44,19 +43,17 @@ public class FilmMapper {
         filmDto.setDuration(film.getDuration());
         filmDto.setReleaseDate(film.getReleaseDate());
 
-        // Обработка жанров - всегда возвращаем Set, даже если пустой
+        // TreeSet автоматически сортирует благодаря Comparable в Genre
         Set<GenreDto> genreDtos = film.getGenres().stream()
                 .map(genre -> new GenreDto(genre.getId(), genre.getName()))
                 .collect(Collectors.toCollection(TreeSet::new));
 
         filmDto.setGenresFromDto(genreDtos);
 
-        // Обработка MPA
         if (film.getMpa() != null) {
             filmDto.setMpa(film.getMpa());
         }
 
-        // Обработка режиссеров
         if (film.getDirectors() != null) {
             filmDto.setDirectors(new TreeSet<>(film.getDirectors()));
         } else {

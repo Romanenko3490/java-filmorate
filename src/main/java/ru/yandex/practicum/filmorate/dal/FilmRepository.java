@@ -43,7 +43,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private static final String GET_FILM_GENRES_QUERY =
             "SELECT g.genre_id, g.name FROM film_genre fg " +
                     "JOIN genre g ON fg.genre_id = g.genre_id " +
-                    "WHERE fg.film_id = ? ORDER BY g.genre_id ASC";
+                    "WHERE fg.film_id = ? ORDER BY g.genre_id";;
     // endregion
 
     private static final String INSERT_FILM_DIRECTOR_QUERY =
@@ -361,9 +361,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             return genre;
         }, film.getId());
 
-        Set<Genre> sortedGenres = new TreeSet<>(Comparator.comparing(Genre::getId));
-        sortedGenres.addAll(genres);
-        film.setGenres(sortedGenres);
+        film.setGenres(new TreeSet<>(genres));
     }
 
     private void loadGenresForFilms(Collection<Film> films) {
@@ -384,7 +382,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             Film film = filmMap.get(filmId);
             if (film != null) {
                 if (film.getGenres() == null) {
-                    film.setGenres(new LinkedHashSet<>());
+                    film.setGenres(new TreeSet<>());
                 }
                 Genre genre = new Genre();
                 genre.setId(rs.getInt("genre_id"));
@@ -392,13 +390,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                 film.getGenres().add(genre);
             }
         }, filmMap.keySet().toArray());
-
-        // Гарантируем, что у всех фильмов есть Set (даже пустой)
-        films.forEach(film -> {
-            if (film.getGenres() == null) {
-                film.setGenres(new LinkedHashSet<>());
-            }
-        });
     }
     // endregion
 

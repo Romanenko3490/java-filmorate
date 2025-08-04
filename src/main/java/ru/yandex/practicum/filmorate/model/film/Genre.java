@@ -2,10 +2,11 @@ package ru.yandex.practicum.filmorate.model.film;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.dto.GenreDto;
 
 @Slf4j
 @Data
-public class Genre {
+public class Genre implements Comparable<Genre> {
     private long id;
     private String name;
 
@@ -15,5 +16,10 @@ public class Genre {
     }
 
     public Genre() {
+    }
+
+    @Override
+    public int compareTo(Genre o) {
+        return Long.compare(this.id, o.id);
     }
 }

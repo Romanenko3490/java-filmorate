@@ -5,12 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// GenreDto.java
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class GenreDto {
+public class GenreDto implements Comparable<GenreDto> {
     private Long id;
     private String name;
 
@@ -18,6 +17,4 @@ public class GenreDto {
     public int compareTo(GenreDto other) {
         return this.id.compareTo(other.getId());
     }
-
-
 }

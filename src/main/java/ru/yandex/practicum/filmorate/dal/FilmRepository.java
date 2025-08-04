@@ -329,10 +329,8 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private void updateFilmGenres(Film film) {
         checkFilm(film.getId());
 
-        // Всегда сначала удаляем все текущие жанры
         jdbc.update("DELETE FROM film_genre WHERE film_id = ?", film.getId());
 
-        // Если genres не null и не пустой - добавляем новые
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             List<Object[]> batchArgs = film.getGenres().stream()
                     .filter(Objects::nonNull)
@@ -346,9 +344,8 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             }
         }
 
-        // Обновляем поле genres у объекта Film
         if (film.getGenres() == null) {
-            film.setGenres(null);
+            film.setGenres(new HashSet<>());
         } else {
             Set<Genre> updatedGenres = jdbc.query(
                     "SELECT g.genre_id, g.name FROM film_genre fg " +

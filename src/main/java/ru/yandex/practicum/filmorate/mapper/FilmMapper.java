@@ -34,11 +34,11 @@ public class FilmMapper {
         filmDto.setDescription(film.getDescription());
         filmDto.setDuration(film.getDuration());
         if (film.getGenres() != null) {
-            filmDto.setGenresIdList(film.getGenres().stream().map(Genre::getId).sorted().collect(Collectors.toList()));
+            filmDto.setGenres(film.getGenres().stream().map(Genre::getId).sorted().collect(Collectors.toList()));
         }
         filmDto.setReleaseDate(film.getReleaseDate());
         if (film.getMpa() != null) {
-            filmDto.setMpaId(film.getMpa().getId());
+            filmDto.setMpa(film.getMpa().getId());
         }
         if (film.getDirectors() != null) {
             filmDto.setDirectors(film.getDirectors());

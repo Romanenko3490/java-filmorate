@@ -17,8 +17,8 @@ public class FilmDto {
     private String description;
     private LocalDate releaseDate;
     private Integer duration;
-    private List<Long> genresIdList;
-    private Integer mpaId;
+    private List<Long> genres;
+    private Integer mpa;
     private Set<Director> directors;
 
 
@@ -38,11 +38,11 @@ public class FilmDto {
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
-        this.genresIdList = genres.stream()
+        this.genres = genres.stream()
                 .map(Genre::getId)
                 .sorted()
                 .collect(Collectors.toList());
-        this.mpaId = mpa.getId();
+        this.mpa = mpa.getId();
         this.directors = directors;
     }
 }

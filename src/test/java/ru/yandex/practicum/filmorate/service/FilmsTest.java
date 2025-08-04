@@ -85,7 +85,7 @@ class FilmsTest {
         assertThat(retrievedFilm.getName()).isEqualTo("Test Film");
         assertThat(retrievedFilm.getDescription()).isEqualTo("Test Description");
         assertThat(retrievedFilm.getDuration()).isEqualTo(120);
-        assertThat(retrievedFilm.getMpaId()).isEqualTo(1);
+        assertThat(retrievedFilm.getMpa()).isEqualTo(1);
     }
 
     @Test

@@ -141,7 +141,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_likes.film_id = f.film_id) DESC, f.film_id";
     // endregion
 
-    // region SQL Queries - Search Operations
+    // region SQL Queries - Common Films Query
     private static final String GET_COMMON_FILMS_QUERY =
             "SELECT f.*, m.mpa_id, m.mpa_name, m.description AS mpa_description " +
                     "FROM films f " +
@@ -627,7 +627,10 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     //CommonFilms region
     public List<Film> getCommonFilms(long userId, long friendId) {
-        return jdbc.query(GET_COMMON_FILMS_QUERY, mapper, userId, friendId);
+        List<Film> films = jdbc.query(GET_COMMON_FILMS_QUERY, mapper, userId, friendId);
+        loadGenresForFilms(films);
+        loadDirectorsForFilms(films);
+        return films;
     }
     //endregion
 

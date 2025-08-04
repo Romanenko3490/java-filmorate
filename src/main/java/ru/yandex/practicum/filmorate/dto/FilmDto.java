@@ -21,7 +21,7 @@ public class FilmDto {
     private Integer duration;
     private Set<GenreDto> genres = new LinkedHashSet<>();
     private MpaDto mpa;
-    private Set<Director> directors;
+    private Set<Director> directors = new  LinkedHashSet<>();
 
     public FilmDto() {
     }
@@ -46,16 +46,22 @@ public class FilmDto {
     }
 
     public void setGenres(Set<Genre> genres) {
-        if (genres == null || genres.isEmpty()) {
-            this.genres = null;
-        } else {
-            this.genres = genres.stream()
+        this.genres.clear(); // Очищаем перед добавлением новых
+        if (genres != null) {
+            this.genres.addAll(genres.stream()
                     .map(genre -> new GenreDto(genre.getId(), genre.getName()))
-                    .collect(Collectors.toCollection(LinkedHashSet::new));
+                    .collect(Collectors.toList()));
         }
     }
 
     public void setMpa(MpaRating mpa) {
         this.mpa = mpa != null ? new MpaDto(mpa.getId(), mpa.getName()) : null;
+    }
+
+    public void setDirectors(Set<Director> directors) {
+        this.directors.clear();
+        if (directors != null) {
+            this.directors.addAll(directors);
+        }
     }
 }

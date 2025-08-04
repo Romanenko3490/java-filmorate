@@ -327,12 +327,11 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     // region Genre Operations
     private void updateFilmGenres(Film film) {
+        checkFilm(film.getId());
         jdbc.update(DELETE_FILM_GENRES_QUERY, film.getId());
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            // Сортируем по id перед сохранением
             List<Object[]> batchArgs = film.getGenres().stream()
-                    .sorted(Comparator.comparing(Genre::getId))
                     .map(genre -> new Object[]{film.getId(), genre.getId()})
                     .collect(Collectors.toList());
 
@@ -356,12 +355,15 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private void loadGenresForFilm(Film film) {
         List<Genre> genres = jdbc.query(GET_FILM_GENRES_QUERY, (rs, rowNum) -> {
             Genre genre = new Genre();
-            genre.setId(rs.getInt("genre_id"));
+            genre.setId(rs.getLong("genre_id"));
             genre.setName(rs.getString("name"));
             return genre;
         }, film.getId());
+        Set<Genre> sortedGenres = genres.stream()
+                .sorted(Comparator.comparing(Genre::getId))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        film.setGenres(new TreeSet<>(genres));
+        film.setGenres(sortedGenres);
     }
 
     private void loadGenresForFilms(Collection<Film> films) {
@@ -382,7 +384,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             Film film = filmMap.get(filmId);
             if (film != null) {
                 if (film.getGenres() == null) {
-                    film.setGenres(new TreeSet<>());
+                    film.setGenres(new LinkedHashSet<>());
                 }
                 Genre genre = new Genre();
                 genre.setId(rs.getInt("genre_id"));
@@ -390,6 +392,13 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                 film.getGenres().add(genre);
             }
         }, filmMap.keySet().toArray());
+
+        // Гарантируем, что у всех фильмов есть Set (даже пустой)
+        films.forEach(film -> {
+            if (film.getGenres() == null) {
+                film.setGenres(new LinkedHashSet<>());
+            }
+        });
     }
     // endregion
 

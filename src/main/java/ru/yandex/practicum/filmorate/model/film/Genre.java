@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Data
-public class Genre implements Comparable<Genre> {
+public class Genre {
     private long id;
     private String name;
 
@@ -15,10 +15,5 @@ public class Genre implements Comparable<Genre> {
     }
 
     public Genre() {
-    }
-
-    @Override
-    public int compareTo(Genre o) {
-        return Long.compare(this.id, o.id);
     }
 }

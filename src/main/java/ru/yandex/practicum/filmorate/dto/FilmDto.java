@@ -63,7 +63,7 @@ public class FilmDto {
     }
 
     public void setMpa(MpaRating mpa) {
-        if (mpa == null) {
+        if (mpa != null) {
             this.mpa = new MpaDto(mpa.getId(), mpa.getName());
         }
     }

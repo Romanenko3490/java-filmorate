@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.filmorate.controller.UserDbController;
 import ru.yandex.practicum.filmorate.dal.*;
 import ru.yandex.practicum.filmorate.dal.mappers.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
@@ -37,6 +38,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         DirectorRepositoryImpl.class,
         FilmRowMapper.class,
         UserRowMapper.class,
+        UserDbService.class,
+        FriendshipRepository.class,
         DirectorRowMapper.class})
 @Sql(scripts = {"/schema.sql", "/test-data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class FilmsTest {
@@ -214,4 +217,59 @@ class FilmsTest {
 
         return count != null ? count : 0;
     }
+
+    @Test
+    void shouldGetCommonFilms() {
+        // Создаем двух пользователей
+        Long user1Id = 1L;
+        Long user2Id = 2L;
+
+        // Создаем несколько фильмов
+        FilmDto film1 = filmDbService.addFilm(newFilmRequest);
+
+        NewFilmRequest anotherFilm = new NewFilmRequest();
+        anotherFilm.setName("Common Film");
+        anotherFilm.setDescription("Film liked by both users");
+        anotherFilm.setReleaseDate(LocalDate.of(2001, 1, 1));
+        anotherFilm.setDuration(90);
+        MpaRating mpa = new MpaRating();
+        mpa.setId(2);
+        anotherFilm.setMpa(mpa);
+        FilmDto film2 = filmDbService.addFilm(anotherFilm);
+
+        // Добавляем лайки
+        filmDbService.addLike(film1.getId(), user1Id);
+        filmDbService.addLike(film2.getId(), user1Id); // Общий фильм
+        filmDbService.addLike(film2.getId(), user2Id); // Общий фильм
+
+        // Получаем общие фильмы
+        List<FilmDto> commonFilms = filmDbService.getCommonFilms(user1Id, user2Id);
+
+        // Проверяем результаты
+        assertThat(commonFilms)
+                .hasSize(1)
+                .extracting(FilmDto::getId)
+                .containsExactly(film2.getId());
+
+        // Проверяем сортировку по популярности (если добавим больше фильмов)
+        NewFilmRequest thirdFilm = new NewFilmRequest();
+        thirdFilm.setName("Most Popular Common Film");
+        thirdFilm.setDescription("Most popular film liked by both");
+        thirdFilm.setReleaseDate(LocalDate.of(2002, 1, 1));
+        thirdFilm.setDuration(100);
+        thirdFilm.setMpa(mpa);
+        FilmDto film3 = filmDbService.addFilm(thirdFilm);
+
+        filmDbService.addLike(film3.getId(), user1Id);
+        filmDbService.addLike(film3.getId(), user2Id);
+        filmDbService.addLike(film3.getId(), 3L); // Дополнительный лайк
+
+        List<FilmDto> updatedCommonFilms = filmDbService.getCommonFilms(user1Id, user2Id);
+
+        assertThat(updatedCommonFilms)
+                .hasSize(2)
+                .extracting(FilmDto::getId)
+                .containsExactly(film3.getId(), film2.getId()); // Сначала более популярный
+    }
+
 }

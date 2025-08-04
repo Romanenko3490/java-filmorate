@@ -61,44 +61,44 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private static final String GET_POPULAR_FILMS_QUERY =
             "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
                     "m.mpa_id, m.mpa_name, m.description AS mpa_description, " +
-                    "COUNT(fl.user_id) AS likes_count " +
+                    "(SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) AS likes_count " +
                     "FROM films f " +
                     "LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
-                    "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
-                    "GROUP BY f.film_id, m.mpa_id " +
                     "ORDER BY likes_count DESC, f.film_id " +
                     "LIMIT ?";
+
     private static final String CHECK_MPA_EXISTS_QUERY =
             "SELECT COUNT(*) FROM mpa_rating WHERE mpa_id = ?";
 
     private static final String GET_POPULAR_FILMS_BY_GENRE_QUERY =
             "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
-                    "m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "m.mpa_id, m.mpa_name, m.description AS mpa_description, " +
+                    "(SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) AS likes_count " +
                     "FROM films f " +
-                    "JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id\n" +
-                    "WHERE f.film_id IN (\n" +
-                    "    SELECT fg.film_id FROM film_genre fg WHERE fg.genre_id = ?\n" +
-                    ")\n" +
-                    "ORDER BY (SELECT COUNT(*) FROM film_likes fl WHERE fl.film_id = f.film_id) DESC\n" +
+                    "JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
+                    "WHERE f.film_id IN (SELECT fg.film_id FROM film_genre fg WHERE fg.genre_id = ?) " +
+                    "ORDER BY likes_count DESC " +
                     "LIMIT ?";
 
     private static final String GET_POPULAR_FILMS_BY_GENRE_AND_YEAR_QUERY =
             "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
-                    "m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "m.mpa_id, m.mpa_name, m.description AS mpa_description, " +
+                    "(SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) AS likes_count " +
                     "FROM films f " +
                     "JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
-                    "WHERE f.film_id IN (SELECT fg.film_id FROM film_genre fg WHERE fg.genre_id = ?\n" +
-                    ") AND EXTRACT(YEAR FROM f.release_date) = ?" +
-                    "ORDER BY (SELECT COUNT(*) FROM film_likes fl WHERE fl.film_id = f.film_id) DESC " +
+                    "WHERE f.film_id IN (SELECT fg.film_id FROM film_genre fg WHERE fg.genre_id = ?) " +
+                    "AND EXTRACT(YEAR FROM f.release_date) = ? " +
+                    "ORDER BY likes_count DESC " +
                     "LIMIT ?";
 
     private static final String GET_POPULAR_FILMS_BY_YEAR_QUERY =
             "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
-                    "m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "m.mpa_id, m.mpa_name, m.description AS mpa_description, " +
+                    "(SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) AS likes_count " +
                     "FROM films f " +
                     "LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
                     "WHERE EXTRACT(YEAR FROM f.release_date) = ? " +
-                    "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) DESC " +
+                    "ORDER BY likes_count DESC " +
                     "LIMIT ?";
 
     // endregion
@@ -167,6 +167,16 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             "SELECT user_id, film_id FROM film_likes";
     private static final String GET_USER_LIKED_FILMS =
             "SELECT film_id FROM film_likes WHERE user_id = ?";
+    //endregion
+
+    // region SQL Queries - Common Films Query
+    private static final String GET_COMMON_FILMS_QUERY =
+            "SELECT f.*, m.mpa_id, m.mpa_name, m.description AS mpa_description " +
+                    "FROM films f " +
+                    "JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
+                    "WHERE EXISTS (SELECT 1 FROM film_likes WHERE user_id = ? AND film_id = f.film_id) " +
+                    "AND EXISTS (SELECT 1 FROM film_likes WHERE user_id = ? AND film_id = f.film_id) " +
+                    "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) DESC";
     //endregion
 
     public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
@@ -303,6 +313,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         }
     }
 
+    @Transactional
     public void removeLike(long filmId, long userId) {
         int rowsDeleted = jdbc.update(DELETE_FILM_LIKE_QUERY, filmId, userId);
         log.debug("Deleted {} rows for filmId {} and userId {}", rowsDeleted, filmId, userId);
@@ -432,30 +443,30 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     //реализация Slope One алгоритма - ресурс (https://www.baeldung.com/java-collaborative-filtering-recommendations).
     public List<Film> getRecommendedFilms(long userId) {
-        // 1. Получаем все лайки пользователей
+        // Получаем все лайки пользователей
         List<Map<String, Object>> allLikes = jdbc.queryForList(GET_ALL_USER_LIKES);
 
-        // 2. Получаем фильмы, которые лайкнул текущий пользователь
+        // Получаем фильмы, которые лайкнул текущий пользователь
         List<Long> userLikedFilms = jdbc.queryForList(
                 GET_USER_LIKED_FILMS, Long.class, userId);
 
-        // 3. Строим матрицу пользователь-фильм
+        // Строим матрицу пользователь-фильм
         Map<Long, Map<Long, Integer>> userItemMatrix = buildUserItemMatrix(allLikes);
 
-        // 4. Вычисляем средние разницы между фильмами
+        // Вычисляем средние разницы между фильмами
         Map<Long, Map<Long, Double>> deviations = computeDeviations(userItemMatrix);
 
-        // 5. Получаем предсказанные оценки для непросмотренных фильмов
+        // Получаем предсказанные оценки для непросмотренных фильмов
         Map<Long, Double> predictions = predictRatings(
                 userId, userLikedFilms, userItemMatrix, deviations);
 
-        // 6. Сортируем фильмы по предсказанным оценкам
+        // Сортируем фильмы по предсказанным оценкам
         List<Long> recommendedFilmIds = predictions.entrySet().stream()
                 .sorted(Map.Entry.<Long, Double>comparingByValue().reversed())
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
 
-        // 7. Получаем полную информацию о фильмах
+        // Получаем полную информацию о фильмах
         return getFilmsByIds(recommendedFilmIds);
     }
 
@@ -597,16 +608,12 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             String normalizedBy = by.toLowerCase().replaceAll("\\s", "");
 
             if (normalizedBy.contains("title") && normalizedBy.contains("director")) {
-                // Поиск и по названию, и по режиссёру
                 films = jdbc.query(SEARCH_FILMS_BY_TITLE_AND_DIRECTOR_QUERY, mapper, searchPattern, searchPattern);
             } else if (normalizedBy.contains("title")) {
-                // Поиск только по названию
                 films = jdbc.query(SEARCH_FILMS_BY_TITLE_QUERY, mapper, searchPattern);
             } else if (normalizedBy.contains("director")) {
-                // Поиск только по режиссёру
                 films = jdbc.query(SEARCH_FILMS_BY_DIRECTOR_QUERY, mapper, searchPattern);
             } else {
-                // Неизвестный параметр by, ищем по названию по умолчанию
                 films = jdbc.query(SEARCH_FILMS_BY_TITLE_QUERY, mapper, searchPattern);
             }
         }
@@ -617,5 +624,14 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         log.debug("Found {} films for search query: '{}'", films.size(), query);
         return films;
     }
+
+    //CommonFilms region
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        List<Film> films = jdbc.query(GET_COMMON_FILMS_QUERY, mapper, userId, friendId);
+        loadGenresForFilms(films);
+        loadDirectorsForFilms(films);
+        return films;
+    }
+    //endregion
 
 }

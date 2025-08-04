@@ -32,6 +32,7 @@ public class FilmDbService {
     private final MpaRepository mpaRepository;
     private final GenreRepository genreRepository;
     private final DirectorRepository directorRepository;
+    private final UserDbService userDbService;
 
 
     public Collection<FilmDto> getAllFilms() {
@@ -114,6 +115,7 @@ public class FilmDbService {
 
         film.getLikes().remove(userId);
         filmRepository.updateFilm(film);
+        filmRepository.removeLike(filmId, userId);
         log.info("User {} removed like from film {}", userId, filmId);
         return FilmMapper.mapToFilmDto(film);
     }
@@ -190,6 +192,22 @@ public class FilmDbService {
         List<Film> films = filmRepository.searchFilms(query, by);
 
         return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<FilmDto> getCommonFilms(long userId, long friendId) {
+        // Проверяем существование пользователей
+        if (!userDbService.userExists(userId)) {
+            throw new NotFoundException("User not found with id: " + userId);
+        }
+        if (!userDbService.userExists(friendId)) {
+            throw new NotFoundException("User not found with id: " + friendId);
+        }
+
+        // Получаем общие фильмы, отсортированные по популярности
+        List<Film> commonFilms = filmRepository.getCommonFilms(userId, friendId);
+        return commonFilms.stream()
                 .map(FilmMapper::mapToFilmDto)
                 .collect(Collectors.toList());
     }

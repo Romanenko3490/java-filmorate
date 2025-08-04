@@ -108,4 +108,11 @@ public class FilmDbController {
         return results;
     }
 
+    @GetMapping("/common")
+    public Collection<FilmDto> getCommonFilms(
+            @RequestParam long userId,
+            @RequestParam long friendId) {
+        return filmDbService.getCommonFilms(userId, friendId);
+    }
+
 }

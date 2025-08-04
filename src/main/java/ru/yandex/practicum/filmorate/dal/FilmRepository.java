@@ -330,33 +330,31 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         checkFilm(film.getId());
 
         // 1. Получаем текущие жанры фильма из БД
-        Set<Long> currentGenreIds = jdbc.query(
+        Set<Long> currentGenres = jdbc.query(
                 "SELECT genre_id FROM film_genre WHERE film_id = ?",
                 (rs, rowNum) -> rs.getLong("genre_id"),
                 film.getId()
         ).stream().collect(Collectors.toSet());
 
-        // 2. Если в запросе нет жанров - просто выходим (не трогаем существующие)
-        if (film.getGenres() == null || film.getGenres().isEmpty()) {
-            return;
-        }
+        // 2. Получаем новые жанры из запроса (фильтруем null)
+        Set<Long> newGenres = film.getGenres() == null ? Set.of() :
+                film.getGenres().stream()
+                        .filter(Objects::nonNull)
+                        .map(Genre::getId)
+                        .collect(Collectors.toSet());
 
-        // 3. Получаем ID новых жанров из запроса
-        Set<Long> newGenreIds = film.getGenres().stream()
-                .filter(Objects::nonNull)
-                .map(Genre::getId)
-                .collect(Collectors.toSet());
+        // 3. Объединяем жанры (убираем дубли через Set)
+        Set<Long> mergedGenres = new HashSet<>();
+        mergedGenres.addAll(currentGenres);
+        mergedGenres.addAll(newGenres);
 
-        // 4. Определяем только те жанры, которых еще нет у фильма
-        Set<Long> genresToAdd = newGenreIds.stream()
-                .filter(genreId -> !currentGenreIds.contains(genreId))
-                .collect(Collectors.toSet());
+        // 4. Полностью перезаписываем все жанры фильма
+        jdbc.update("DELETE FROM film_genre WHERE film_id = ?", film.getId());
 
-        // 5. Добавляем только новые жанры
-        if (!genresToAdd.isEmpty()) {
+        if (!mergedGenres.isEmpty()) {
             jdbc.batchUpdate(
                     "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)",
-                    genresToAdd.stream()
+                    mergedGenres.stream()
                             .map(genreId -> new Object[]{film.getId(), genreId})
                             .collect(Collectors.toList())
             );

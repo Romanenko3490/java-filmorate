@@ -22,6 +22,9 @@ public class FilmDto {
     private Set<Director> directors;
 
 
+    public FilmDto() {
+    }
+
     public FilmDto(Long id,
                    String name,
                    String description,

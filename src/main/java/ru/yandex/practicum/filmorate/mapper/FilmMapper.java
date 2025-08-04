@@ -7,6 +7,9 @@ import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.model.film.Film;
+import ru.yandex.practicum.filmorate.model.film.Genre;
+
+import java.util.stream.Collectors;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -30,10 +33,16 @@ public class FilmMapper {
         filmDto.setName(film.getName());
         filmDto.setDescription(film.getDescription());
         filmDto.setDuration(film.getDuration());
-        filmDto.setGenres(film.getGenres());
+        if (film.getGenres() != null) {
+            filmDto.setGenresIdList(film.getGenres().stream().map(Genre::getId).sorted().collect(Collectors.toList()));
+        }
         filmDto.setReleaseDate(film.getReleaseDate());
-        filmDto.setMpa(film.getMpa());
-        filmDto.setDirectors(film.getDirectors());
+        if (film.getMpa() != null) {
+            filmDto.setMpaId(film.getMpa().getId());
+        }
+        if (film.getDirectors() != null) {
+            filmDto.setDirectors(film.getDirectors());
+        }
         return filmDto;
     }
 

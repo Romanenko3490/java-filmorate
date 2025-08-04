@@ -1,30 +1,29 @@
 package ru.yandex.practicum.filmorate.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import ru.yandex.practicum.filmorate.model.film.Director;
 import ru.yandex.practicum.filmorate.model.film.Genre;
 import ru.yandex.practicum.filmorate.model.film.MpaRating;
 
 import java.time.LocalDate;
-import java.util.Map;
-import java.util.Objects;
+import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class FilmDto {
     private Long id;
     private String name;
     private String description;
     private LocalDate releaseDate;
     private Integer duration;
-    private Map<Long, String> genres;
+    private Set<GenreDto> genres;
     private MpaDto mpa;
     private Set<Director> directors;
 
     public FilmDto() {
-        this.genres = new TreeMap<>(); // Инициализация TreeMap для автоматической сортировки
     }
 
     public FilmDto(Long id,
@@ -41,30 +40,22 @@ public class FilmDto {
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
-        this.setGenres(genres); // Используем сеттер для установки жанров
+        this.setGenres(genres);
         this.setMpa(mpa);
         this.directors = directors;
     }
 
     public void setGenres(Set<Genre> genres) {
-        if (genres == null) {
-            this.genres = new TreeMap<>();
-            return;
+        if (genres == null || genres.isEmpty()) {
+            this.genres = null;
+        } else {
+            this.genres = genres.stream()
+                    .map(genre -> new GenreDto(genre.getId(), genre.getName()))
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
         }
-
-        this.genres = genres.stream()
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(
-                        Genre::getId,
-                        g -> g.getName() != null ? g.getName() : "",
-                        (existing, replacement) -> existing,
-                        TreeMap::new
-                ));
     }
 
     public void setMpa(MpaRating mpa) {
-        if (mpa != null) {
-            this.mpa = new MpaDto(mpa.getId(), mpa.getName());
-        }
+        this.mpa = mpa != null ? new MpaDto(mpa.getId(), mpa.getName()) : null;
     }
 }

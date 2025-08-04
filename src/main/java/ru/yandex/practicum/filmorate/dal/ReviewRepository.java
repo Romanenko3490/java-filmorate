@@ -160,9 +160,11 @@ public class ReviewRepository extends BaseRepository<Review> {
     private boolean checkReview(long reviewId) {
         return checker.reviewExists(reviewId);
     }
+
     private boolean checkFilmId(long filmId) {
         return checker.filmExists(filmId);
     }
+
     private boolean checkUserId(long userId) {
         return checker.userExist(userId);
     }

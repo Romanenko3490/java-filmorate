@@ -327,16 +327,24 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     // region Genre Operations
     private void updateFilmGenres(Film film) {
-        checkFilm(film.getId());
+        Set<Genre> currentGenres = jdbc.query(GET_FILM_GENRES_QUERY,
+                        (rs, rowNum) -> new Genre(rs.getLong("genre_id"), rs.getString("name")),
+                        film.getId())
+                .stream()
+                .collect(Collectors.toSet());
+
+        Set<Genre> newGenres = film.getGenres() != null ?
+                new HashSet<>(film.getGenres()) :
+                Collections.emptySet();
+
+        if (currentGenres.containsAll(newGenres)) {
+            return;
+        }
+
         jdbc.update(DELETE_FILM_GENRES_QUERY, film.getId());
 
-        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            // Сортируем жанры по ID перед вставкой
-            List<Genre> sortedGenres = film.getGenres().stream()
-                    .sorted(Comparator.comparing(Genre::getId))
-                    .collect(Collectors.toList());
-
-            List<Object[]> batchArgs = sortedGenres.stream()
+        if (!newGenres.isEmpty()) {
+            List<Object[]> batchArgs = newGenres.stream()
                     .map(genre -> new Object[]{film.getId(), genre.getId()})
                     .collect(Collectors.toList());
 

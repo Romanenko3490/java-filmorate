@@ -13,8 +13,8 @@ import java.util.Set;
 public class DirectorRepositoryImpl extends BaseRepository<Director> implements DirectorRepository {
 
 
-    public DirectorRepositoryImpl(JdbcTemplate jdbc, DirectorRowMapper mapper) {
-        super(jdbc, mapper);
+    public DirectorRepositoryImpl(JdbcTemplate jdbc, DirectorRowMapper mapper, Checker checker) {
+        super(jdbc, mapper, checker);
     }
 
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM directors WHERE id = ?";
@@ -43,12 +43,14 @@ public class DirectorRepositoryImpl extends BaseRepository<Director> implements 
 
     @Override
     public Director update(Director director) {
+        checker.directorExists(director.getId());
         update(UPDATE_DIRECTOR_QUERY, director.getName(), director.getId());
         return director;
     }
 
     @Override
     public void delete(long id) {
+        checker.directorExists(id);
         delete(DELETE_DIRECTOR_QUERY, id);
     }
 

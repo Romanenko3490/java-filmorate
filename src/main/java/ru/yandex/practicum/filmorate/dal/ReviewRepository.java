@@ -6,7 +6,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
 
 import java.util.HashMap;
@@ -45,8 +44,8 @@ public class ReviewRepository extends BaseRepository<Review> {
     private static final String GET_AUTHOR_ID_QUERY = "SELECT user_id FROM reviews WHERE review_id = ?";
     // endregion
 
-    public ReviewRepository(JdbcTemplate jdbc, RowMapper<Review> mapper) {
-        super(jdbc, mapper);
+    public ReviewRepository(JdbcTemplate jdbc, RowMapper<Review> mapper, Checker checker) {
+        super(jdbc, mapper, checker);
     }
 
     // region CRUD Operations
@@ -82,19 +81,19 @@ public class ReviewRepository extends BaseRepository<Review> {
     }
 
     public Review update(Review review) {
-        int updated = jdbc.update(UPDATE_REVIEW_QUERY,
+        checkReview(review.getReviewId());
+
+        jdbc.update(UPDATE_REVIEW_QUERY,
                 review.getContent(),
                 review.getIsPositive(),
                 review.getUseful(),
                 review.getReviewId());
 
-        if (updated == 0) {
-            throw new NotFoundException("Review with id " + review.getReviewId() + " not found");
-        }
         return review;
     }
 
     public boolean delete(long reviewId) {
+        checkReview(reviewId);
         int deleted = jdbc.update(DELETE_REVIEW_QUERY, reviewId);
         return deleted > 0;
     }
@@ -102,36 +101,47 @@ public class ReviewRepository extends BaseRepository<Review> {
 
     // region Like/Dislike Operations
     public void addLike(long reviewId, long userId) {
+        checkReview(reviewId);
+        checkUserId(userId);
         jdbc.update(INSERT_REVIEW_LIKE_QUERY, reviewId, userId);
         updateUseful(reviewId);
     }
 
     public void addDislike(long reviewId, long userId) {
+        checkReview(reviewId);
+        checkUserId(userId);
         jdbc.update(INSERT_REVIEW_DISLIKE_QUERY, reviewId, userId);
         updateUseful(reviewId);
     }
 
     public void removeLike(long reviewId, long userId) {
+        checkReview(reviewId);
+        checkUserId(userId);
         jdbc.update(DELETE_REVIEW_LIKE_QUERY, reviewId, userId);
         updateUseful(reviewId);
     }
 
     public void removeDislike(long reviewId, long userId) {
+        checkReview(reviewId);
+        checkUserId(userId);
         jdbc.update(DELETE_REVIEW_DISLIKE_QUERY, reviewId, userId);
         updateUseful(reviewId);
     }
 
     private void updateUseful(long reviewId) {
+        checkReview(reviewId);
         jdbc.update(UPDATE_REVIEW_USEFUL_QUERY, reviewId, reviewId, reviewId);
     }
     // endregion
 
     // region Special Operations
     public List<Review> findAllByFilmId(Long filmId, int count) {
+        checkFilmId(filmId);
         return jdbc.query(GET_REVIEWS_BY_FILM_QUERY, mapper, filmId, count);
     }
 
     public List<Review> findAll(int count) {
+
         return jdbc.query(GET_ALL_REVIEWS_LIMITED_QUERY, mapper, count);
     }
     // endregion
@@ -145,5 +155,15 @@ public class ReviewRepository extends BaseRepository<Review> {
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
+    }
+
+    private boolean checkReview(long reviewId) {
+        return checker.reviewExists(reviewId);
+    }
+    private boolean checkFilmId(long filmId) {
+        return checker.filmExists(filmId);
+    }
+    private boolean checkUserId(long userId) {
+        return checker.userExist(userId);
     }
 }

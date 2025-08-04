@@ -5,7 +5,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dal.*;
+import ru.yandex.practicum.filmorate.dal.DirectorRepository;
+import ru.yandex.practicum.filmorate.dal.FilmRepository;
+import ru.yandex.practicum.filmorate.dal.GenreRepository;
+import ru.yandex.practicum.filmorate.dal.MpaRepository;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
@@ -17,6 +20,7 @@ import ru.yandex.practicum.filmorate.model.film.Director;
 import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.model.film.Genre;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -27,12 +31,11 @@ import java.util.stream.Collectors;
 @Primary
 @RequiredArgsConstructor
 public class FilmDbService {
-    private final UserRepository userRepository;
     private final FilmRepository filmRepository;
     private final MpaRepository mpaRepository;
     private final GenreRepository genreRepository;
     private final DirectorRepository directorRepository;
-    private final UserDbService userDbService;
+    private final EntityCheckService entityCheckService;
 
 
     public Collection<FilmDto> getAllFilms() {
@@ -78,8 +81,8 @@ public class FilmDbService {
     }
 
     public FilmDto updateFilm(long filmId, UpdateFilmRequest request) {
-        Film film = filmRepository.getFilmById(filmId)
-                .orElseThrow(() -> new NotFoundException("Film not found with id: " + filmId));
+        entityCheckService.checkFilmExists(filmId);
+        Film film = filmRepository.getFilmById(filmId).get();
 
         if (request.getName() != null) film.setName(request.getName());
         if (request.getDescription() != null) film.setDescription(request.getDescription());
@@ -94,10 +97,8 @@ public class FilmDbService {
     }
 
     public FilmDto addLike(long filmId, long userId) {
-        filmRepository.getFilmById(filmId)
-                .orElseThrow(() -> new NotFoundException("Film not found"));
-        userRepository.getUser(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        entityCheckService.checkFilmExists(filmId);
+        entityCheckService.checkUserExists(userId);
 
         filmRepository.addLike(filmId, userId);
 
@@ -107,12 +108,10 @@ public class FilmDbService {
     }
 
     public FilmDto removeLike(long filmId, long userId) {
-        Film film = filmRepository.getFilmById(filmId)
-                .orElseThrow(() -> new NotFoundException("Film with id " + filmId + " not found"));
+        entityCheckService.checkFilmExists(filmId);
+        entityCheckService.checkUserExists(userId);
 
-        userRepository.getUser(userId)
-                .orElseThrow(() -> new NotFoundException("User with id " + userId + " not found"));
-
+        Film film = filmRepository.getFilmById(filmId).get();
         film.getLikes().remove(userId);
         filmRepository.updateFilm(film);
         filmRepository.removeLike(filmId, userId);
@@ -121,8 +120,19 @@ public class FilmDbService {
     }
 
     public List<FilmDto> getMostPopularFilms(Integer count, Integer genreId, Integer year) {
-        List<Film> films = filmRepository.getPopularFilms(count, genreId, year);
+        if (genreId != null && year != null) {
+            if (genreId <= 0 || genreId > 6) {
+                throw new IllegalArgumentException("Genre id must be between 1 and 6");
+            }
+        }
 
+        if (year != null) {
+            if (year == null || year < 1895 || year > LocalDate.now().getYear()) {
+                throw new IllegalArgumentException("Year must be between 1895 and 1980");
+            }
+        }
+
+        List<Film> films = filmRepository.getPopularFilms(count, genreId, year);
         if (films.isEmpty()) {
             log.warn("No films found with the specified criteria");
         }
@@ -133,14 +143,8 @@ public class FilmDbService {
     }
 
     public void removeFilm(long filmId) {
-        if (!filmRepository.deleteFilm(filmId)) {
-            throw new NotFoundException("Film with id " + filmId + " not found");
-        }
-
-    }
-
-    public boolean filmExists(long filmId) {
-        return filmRepository.getFilmById(filmId).isPresent();
+        entityCheckService.checkFilmExists(filmId);
+        filmRepository.deleteFilm(filmId);
     }
 
     private void validateDirectors(Set<Director> directors) {
@@ -162,6 +166,7 @@ public class FilmDbService {
     }
 
     public List<FilmDto> getFilmsByDirector(long directorId, String sortBy) {
+        entityCheckService.checkDirectorExists(directorId);
         List<Film> films = filmRepository.getFilmsByDirector(directorId, OrderBy.fromParam(sortBy).getColumn());
         return films.stream()
                 .map(FilmMapper::mapToFilmDto)
@@ -197,15 +202,9 @@ public class FilmDbService {
     }
 
     public List<FilmDto> getCommonFilms(long userId, long friendId) {
-        // Проверяем существование пользователей
-        if (!userDbService.userExists(userId)) {
-            throw new NotFoundException("User not found with id: " + userId);
-        }
-        if (!userDbService.userExists(friendId)) {
-            throw new NotFoundException("User not found with id: " + friendId);
-        }
+        entityCheckService.checkUserExists(userId);
+        entityCheckService.checkUserExists(friendId);
 
-        // Получаем общие фильмы, отсортированные по популярности
         List<Film> commonFilms = filmRepository.getCommonFilms(userId, friendId);
         return commonFilms.stream()
                 .map(FilmMapper::mapToFilmDto)

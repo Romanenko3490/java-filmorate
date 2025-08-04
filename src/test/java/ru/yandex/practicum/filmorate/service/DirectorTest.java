@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.dal.DirectorRepositoryImpl;
+import ru.yandex.practicum.filmorate.dal.EntityChecker;
 import ru.yandex.practicum.filmorate.dal.mappers.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.dto.DirectorDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -25,6 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @Import({
         DirectorService.class,
         DirectorRepositoryImpl.class,
+        EntityCheckService.class,
+        EntityChecker.class,
         DirectorRowMapper.class
 })
 @Sql(scripts = {"/schema.sql", "/test-data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)

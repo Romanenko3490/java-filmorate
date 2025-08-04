@@ -18,12 +18,13 @@ public class FeedRepositoryImpl extends BaseRepository<FeedEvent> implements Fee
             "SELECT event_id, user_id, event_type, operation, entity_id, timestamp " +
                     "FROM feed WHERE user_id = ? ORDER BY timestamp ASC";
 
-    public FeedRepositoryImpl(JdbcTemplate jdbc, RowMapper<FeedEvent> mapper) {
-        super(jdbc, mapper);
+    public FeedRepositoryImpl(JdbcTemplate jdbc, RowMapper<FeedEvent> mapper, Checker checker) {
+        super(jdbc, mapper, checker);
     }
 
     @Override
     public List<FeedEvent> getFeedByUserId(Long userId) {
+        checker.userExist(userId);
         return jdbc.query(GET_FEED_QUERY, mapper, userId);
     }
 

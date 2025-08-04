@@ -29,8 +29,8 @@ public class UserRepository extends BaseRepository implements UserStorage {
     private static final String DELETE_QUERY = "DELETE FROM users WHERE user_id = ?";
 
 
-    public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper) {
-        super(jdbc, mapper);
+    public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper, Checker checker) {
+        super(jdbc, mapper, checker);
     }
 
     // Query methods
@@ -78,8 +78,10 @@ public class UserRepository extends BaseRepository implements UserStorage {
     @Override
     public User updateUser(User user) {
         validateUserNotNull(user);
-
-        int rowsUpdated = jdbc.update(
+        if (!checker.userExist(user.getId())) {
+            throw new NotFoundException("User with id: " + user.getId() + " not found");
+        }
+        jdbc.update(
                 UPDATE_QUERY,
                 user.getEmail(),
                 user.getLogin(),
@@ -87,10 +89,6 @@ public class UserRepository extends BaseRepository implements UserStorage {
                 user.getBirthday(),
                 user.getId()
         );
-
-        if (rowsUpdated == 0) {
-            throw new NotFoundException("User with id " + user.getId() + " not found");
-        }
 
         log.debug("Updated user with id: {}", user.getId());
         return user;
@@ -108,4 +106,5 @@ public class UserRepository extends BaseRepository implements UserStorage {
             throw new IllegalArgumentException("User cannot be null");
         }
     }
+
 }

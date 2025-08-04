@@ -39,6 +39,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         FriendshipRepository.class,
         GenreRepositoryImpl.class,
         DirectorRepositoryImpl.class,
+        EntityChecker.class,
+        EntityCheckService.class,
         ReviewRowMapper.class,
         UserRowMapper.class,
         FilmRowMapper.class,
@@ -155,7 +157,7 @@ class ReviewTest {
 
     @Test
     void shouldThrowWhenCountIsNegative() {
-        assertThrows(ValidationException.class,
+        assertThrows(IllegalArgumentException.class,
                 () -> reviewService.getAllReviews(null, -1));
     }
 

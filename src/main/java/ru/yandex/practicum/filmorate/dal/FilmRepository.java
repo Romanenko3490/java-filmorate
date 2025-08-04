@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.model.film.Genre;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -179,8 +180,8 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     "ORDER BY (SELECT COUNT(*) FROM film_likes WHERE film_id = f.film_id) DESC";
     //endregion
 
-    public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper) {
-        super(jdbc, mapper);
+    public FilmRepository(JdbcTemplate jdbc, RowMapper<Film> mapper, Checker checker) {
+        super(jdbc, mapper, checker);
     }
 
     // region Basic Film CRUD Operations
@@ -230,12 +231,8 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     @Override
     @Transactional
     public Film updateFilm(Film film) {
-        // Сначала проверяем существование фильма
-        if (!filmExists(film.getId())) {
-            throw new NotFoundException("Film not found with id: " + film.getId());
-        }
-
-        int updated = jdbc.update(UPDATE_FILM_QUERY,
+        checkFilm(film.getId());
+        jdbc.update(UPDATE_FILM_QUERY,
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),
@@ -243,22 +240,14 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                 film.getMpa().getId(),
                 film.getId());
 
-        if (updated == 0) {
-            throw new NotFoundException("Film not found with id: " + film.getId());
-        }
-
         updateFilmGenres(film);
         updateFilmDirector(film);
         return film;
     }
 
-    private boolean filmExists(long id) {
-        String query = "SELECT COUNT(*) FROM films WHERE film_id = ?";
-        Integer count = jdbc.queryForObject(query, Integer.class, id);
-        return count != null && count > 0;
-    }
 
     public boolean deleteFilm(long filmId) {
+        checkFilm(filmId);
         int deleteCount = jdbc.update(DELETE_FILM_QUERY, filmId);
         return deleteCount > 0;
     }
@@ -277,17 +266,31 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
         int limit = (count != null && count > 0) ? count : 10;
+
+        if (year != null) {
+            if (year < 1985 || year > LocalDate.now().getYear()) {
+                throw new IllegalArgumentException("Year must be between 1985 and 1985.");
+            }
+        }
+
+        if (genreId != null) {
+            if (genreId < 1 || genreId > 6) {
+                throw new IllegalArgumentException("Genre id must be between 1 and 6.");
+            }
+        }
+
+
         if (genreId != null && year != null) {
             log.debug("Executing popular films query with genreId: {}, year: {}, limit: {}", genreId, year, limit);
             List<Film> films = jdbc.query(GET_POPULAR_FILMS_BY_GENRE_AND_YEAR_QUERY, mapper, genreId, year, limit);
             loadGenresForFilms(films);
             return films;
-        } else if (genreId != null) {
+        } else if (genreId != null && year == null) {
             log.debug("Executing popular films query with genreId: {}, limit: {}", genreId, limit);
             List<Film> films = jdbc.query(GET_POPULAR_FILMS_BY_GENRE_QUERY, mapper, genreId, limit);
             loadGenresForFilms(films);
             return films;
-        } else if (year != null) {
+        } else if (year != null && genreId == null) {
             log.debug("Executing popular films query with year: {}, limit: {}", year, limit);
             List<Film> films = jdbc.query(GET_POPULAR_FILMS_BY_YEAR_QUERY, mapper, year, limit);
             loadGenresForFilms(films);
@@ -304,28 +307,27 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     // region Like Operations
     public void addLike(long filmId, long userId) {
-        try {
-            jdbc.update(INSERT_FILM_LIKE_QUERY, filmId, userId);
-            log.info("Like added - filmId: {}, userId: {}", filmId, userId);
-        } catch (Exception e) {
-            log.error("Error adding like", e);
-            throw new RuntimeException("Failed to add like");
-        }
+        checkFilm(filmId);
+        checker.userExist(userId);
+
+        jdbc.update(INSERT_FILM_LIKE_QUERY, filmId, userId);
+        log.info("Like added - filmId: {}, userId: {}", filmId, userId);
+
     }
 
     @Transactional
     public void removeLike(long filmId, long userId) {
+        checkFilm(filmId);
+        checker.userExist(userId);
+
         int rowsDeleted = jdbc.update(DELETE_FILM_LIKE_QUERY, filmId, userId);
         log.debug("Deleted {} rows for filmId {} and userId {}", rowsDeleted, filmId, userId);
-        if (rowsDeleted == 0) {
-            throw new NotFoundException(String.format(
-                    "Like not found for filmId %d and userId %d", filmId, userId));
-        }
     }
     // endregion
 
     // region Genre Operations
     private void updateFilmGenres(Film film) {
+        checkFilm(film.getId());
         jdbc.update(DELETE_FILM_GENRES_QUERY, film.getId());
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
@@ -338,6 +340,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     }
 
     private void updateFilmDirector(Film film) {
+        checkFilm(film.getId());
         jdbc.update(DELETE_FILM_DIRECTOR_QUERY, film.getId());
 
         if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
@@ -385,12 +388,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     }
     // endregion
 
-    // region MPA Operations
-    public boolean mpaExists(int mpaId) {
-        Integer count = jdbc.queryForObject(CHECK_MPA_EXISTS_QUERY, Integer.class, mpaId);
-        return count != null && count > 0;
-    }
-    // endregion
 
 
     //Director ops region
@@ -424,6 +421,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     }
 
     public List<Film> getFilmsByDirector(long directorId, String sortBy) {
+        checker.directorExists(directorId);
         List<Film> films = jdbc.query(GET_FILMS_BY_DIRECTOR_QUERY.formatted(sortBy), (rs, rowNum) -> {
             Film film = new Film();
             film.setId(rs.getLong("film_id"));
@@ -443,6 +441,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     //реализация Slope One алгоритма - ресурс (https://www.baeldung.com/java-collaborative-filtering-recommendations).
     public List<Film> getRecommendedFilms(long userId) {
+        checker.userExist(userId);
         // Получаем все лайки пользователей
         List<Map<String, Object>> allLikes = jdbc.queryForList(GET_ALL_USER_LIKES);
 
@@ -633,5 +632,21 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         return films;
     }
     //endregion
+
+    //check reginon
+
+    private void checkFilm(long filmId) {
+        log.debug("Checking film with id: {}", filmId);
+        if (!checker.filmExists(filmId)) {
+            log.error("Film not found with id: {}", filmId);
+            throw new NotFoundException("Film with id: " + filmId + " not found");
+        }
+    }
+
+    public boolean mpaExists(int mpaId) {
+        Integer count = jdbc.queryForObject(CHECK_MPA_EXISTS_QUERY, Integer.class, mpaId);
+        return count != null && count > 0;
+    }
+
 
 }

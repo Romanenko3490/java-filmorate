@@ -18,14 +18,14 @@ public class MpaRepositoryImpl extends BaseRepository<MpaRating> implements MpaR
     private static final String FIND_ALL_QUERY =
             "SELECT * FROM mpa_rating ORDER BY mpa_id";
 
-    public MpaRepositoryImpl(JdbcTemplate jdbc) {
+    public MpaRepositoryImpl(JdbcTemplate jdbc, Checker checker) {
         super(jdbc, (rs, rowNum) -> {
             MpaRating mpa = new MpaRating();
             mpa.setId(rs.getInt("mpa_id"));
             mpa.setName(rs.getString("mpa_name"));
             mpa.setDescription(rs.getString("description"));
             return mpa;
-        });
+        },  checker);
     }
 
     @Override

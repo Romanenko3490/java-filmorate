@@ -15,6 +15,7 @@ import java.util.*;
 public class BaseRepository<T> {
     protected final JdbcTemplate jdbc;
     protected final RowMapper<T> mapper;
+    protected final Checker checker;
 
     protected Optional<T> findById(String query, Object... args) {
         try {

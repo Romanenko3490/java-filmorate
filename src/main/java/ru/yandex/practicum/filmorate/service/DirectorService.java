@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.DirectorRepository;
 import ru.yandex.practicum.filmorate.dto.DirectorDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.DirectorMapper;
 import ru.yandex.practicum.filmorate.model.film.Director;
 
@@ -30,10 +31,16 @@ public class DirectorService {
     }
 
     public DirectorDto add(Director  director) {
+        if (director.getName() == null) {
+            throw new ValidationException("Name is required");
+        }
         return DirectorMapper.mapToDirectorDto(directorRepository.add(director));
     }
 
     public DirectorDto update(Director director) {
+        if (director.getName() == null) {
+            throw new ValidationException("Name is required");
+        }
         validateAndReturn(director.getId());
         return DirectorMapper.mapToDirectorDto(directorRepository.update(director));
     }

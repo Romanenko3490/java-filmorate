@@ -26,8 +26,10 @@ public class GenreRepositoryImpl extends BaseRepository<Genre> implements GenreR
     private final RowMapper<Genre> genreRowMapper = (rs, rowNum) ->
             new Genre(rs.getInt("genre_id"), rs.getString("name"));
 
-    public GenreRepositoryImpl(JdbcTemplate jdbc) {
-        super(jdbc, (rs, rowNum) -> new Genre(rs.getInt("genre_id"), rs.getString("name")));
+    public GenreRepositoryImpl(JdbcTemplate jdbc, Checker checker) {
+        super(jdbc, (rs, rowNum)
+                -> new Genre(rs.getInt("genre_id"),
+                rs.getString("name")),checker);
     }
 
     @Override

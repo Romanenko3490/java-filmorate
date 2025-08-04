@@ -46,6 +46,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         FilmDbService.class,
         ReviewService.class,
         GenreRepositoryImpl.class,
+        EntityChecker.class,
+        EntityCheckService.class,
         DirectorRepositoryImpl.class,
         DirectorRowMapper.class,
         MpaRepositoryImpl.class
@@ -55,6 +57,9 @@ class FeedTest {
 
     @Autowired
     private FeedService feedService;
+
+    @Autowired
+    private EntityCheckService entityCheckService;
 
     @Autowired
     private UserDbService userDbService;

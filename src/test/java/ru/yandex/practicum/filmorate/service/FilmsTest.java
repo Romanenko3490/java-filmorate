@@ -38,6 +38,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         FilmRowMapper.class,
         UserRowMapper.class,
         UserDbService.class,
+        EntityChecker.class,
+        EntityCheckService.class,
         FriendshipRepository.class,
         DirectorRowMapper.class})
 @Sql(scripts = {"/schema.sql", "/test-data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)

@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.model.film.Genre;
 import ru.yandex.practicum.filmorate.model.film.MpaRating;
+import ru.yandex.practicum.filmorate.service.EntityCheckService;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -21,7 +22,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
 @AutoConfigureTestDatabase
-@Import({FilmRepository.class, GenreRepositoryImpl.class, MpaRepositoryImpl.class, FilmRowMapper.class})
+@Import({
+        FilmRepository.class,
+        GenreRepositoryImpl.class,
+        MpaRepositoryImpl.class,
+        EntityChecker.class,
+        EntityCheckService.class,
+        FilmRowMapper.class})
 @Sql(scripts = {"/schema.sql", "/test-data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class FilmRepositoryTest {
 
@@ -163,7 +170,16 @@ class FilmRepositoryTest {
         assertThrows(NotFoundException.class, () -> {
             Film film = new Film();
             film.setId(999L);
-            film.setLikes(new HashSet<>());
+            film.setName("Test Film");
+            film.setDescription("Test Description");
+            film.setReleaseDate(LocalDate.now());
+            film.setDuration(120);
+
+            MpaRating mpa = new MpaRating();
+            mpa.setId(1);
+            film.setMpa(mpa);
+
+
             filmRepository.updateFilm(film);
         });
     }

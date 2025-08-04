@@ -35,39 +35,49 @@ public class FriendshipRepository extends BaseRepository<User> {
                     "ON CONFLICT (user_id, friend_id) DO UPDATE SET status = 'CONFIRMED'";
 
 
-    public FriendshipRepository(JdbcTemplate jdbc, RowMapper<User> mapper) {
-        super(jdbc, mapper);
+    public FriendshipRepository(JdbcTemplate jdbc, RowMapper<User> mapper, Checker checker) {
+        super(jdbc, mapper, checker);
     }
 
     // Остальные методы остаются без изменений
     public void addFriend(long userId, long friendId) {
+        checker.userExist(userId);
+        checker.userExist(friendId);
         jdbc.update(ADD_FRIEND_QUERY, userId, friendId);
         log.debug("Added CONFIRMED friendship from {} to {}", userId, friendId);
     }
 
-    // Упрощаем confirmFriend (по сути дублирует addFriend)
     public void confirmFriend(long userId, long friendId) {
+        checker.userExist(userId);
+        checker.userExist(friendId);
         jdbc.update(CONFIRM_FRIEND_QUERY, userId, friendId);
     }
 
     public void removeFriend(long userId, long friendId) {
+        checker.userExist(userId);
+        checker.userExist(friendId);
         jdbc.update(REMOVE_FRIEND_QUERY, userId, friendId);
     }
 
     public List<User> getFriends(long userId) {
+        checker.userExist(userId);
         log.debug("Getting friends for user {}", userId);
         return jdbc.query(GET_FRIENDS_QUERY, mapper, userId);
     }
 
     public List<User> getPendingRequests(long userId) {
+        checker.userExist(userId);
         return jdbc.query(GET_PENDING_REQUESTS_QUERY, mapper, userId);
     }
 
     public List<User> getCommonFriends(long userId, long otherId) {
+        checker.userExist(userId);
         return jdbc.query(GET_COMMON_FRIENDS_QUERY, mapper, userId, otherId);
     }
 
     public boolean friendshipExists(long userId, long friendId) {
+        checker.userExist(userId);
+        checker.userExist(friendId);
         Integer count = jdbc.queryForObject(
                 CHECK_FRIENDSHIP_QUERY,
                 Integer.class,

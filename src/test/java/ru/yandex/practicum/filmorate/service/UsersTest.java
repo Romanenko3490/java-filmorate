@@ -9,10 +9,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
-import ru.yandex.practicum.filmorate.dal.FilmRepository;
-import ru.yandex.practicum.filmorate.dal.FriendshipRepository;
-import ru.yandex.practicum.filmorate.dal.ReviewRepository;
-import ru.yandex.practicum.filmorate.dal.UserRepository;
+import ru.yandex.practicum.filmorate.dal.*;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.ReviewRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
@@ -37,6 +34,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         FriendshipRepository.class,
         FilmRepository.class,
         ReviewRepository.class,
+        EntityChecker.class,
+        EntityCheckService.class,
         FilmRowMapper.class,
         ReviewRowMapper.class,
         UserRowMapper.class})

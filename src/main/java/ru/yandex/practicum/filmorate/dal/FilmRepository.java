@@ -329,36 +329,45 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private void updateFilmGenres(Film film) {
         checkFilm(film.getId());
 
-        // 1. Получаем текущие жанры фильма из БД
-        Set<Long> currentGenres = jdbc.query(
-                "SELECT genre_id FROM film_genre WHERE film_id = ?",
-                (rs, rowNum) -> rs.getLong("genre_id"),
+        // 1. Получаем текущие жанры фильма из БД (с сортировкой)
+        Set<Genre> currentGenres = jdbc.query(
+                "SELECT genre_id, name FROM film_genre fg JOIN genre g ON fg.genre_id = g.genre_id WHERE film_id = ? ORDER BY g.genre_id",
+                (rs, rowNum) -> new Genre(rs.getLong("genre_id"), rs.getString("name")),
                 film.getId()
-        ).stream().collect(Collectors.toSet());
+        ).stream().collect(Collectors.toCollection(LinkedHashSet::new));
 
-        // 2. Получаем новые жанры из запроса (фильтруем null)
-        Set<Long> newGenres = film.getGenres() == null ? Set.of() :
-                film.getGenres().stream()
-                        .filter(Objects::nonNull)
-                        .map(Genre::getId)
-                        .collect(Collectors.toSet());
+        // 2. Обработка случая с пустым списком жанров
+        if (film.getGenres() == null) {
+            jdbc.update("DELETE FROM film_genre WHERE film_id = ?", film.getId());
+            film.setGenres(null); // Явно устанавливаем null
+            return;
+        }
 
-        // 3. Объединяем жанры (убираем дубли через Set)
-        Set<Long> mergedGenres = new HashSet<>();
-        mergedGenres.addAll(currentGenres);
-        mergedGenres.addAll(newGenres);
+        // 3. Если пришел пустой список - очищаем жанры
+        if (film.getGenres().isEmpty()) {
+            jdbc.update("DELETE FROM film_genre WHERE film_id = ?", film.getId());
+            film.setGenres(Collections.emptySet());
+            return;
+        }
 
-        // 4. Полностью перезаписываем все жанры фильма
+        // 4. Объединяем жанры (сохраняем порядок)
+        Set<Genre> mergedGenres = new LinkedHashSet<>(currentGenres);
+        mergedGenres.addAll(film.getGenres()); // Добавляем новые жанры
+
+        // 5. Полная перезапись с сохранением порядка
         jdbc.update("DELETE FROM film_genre WHERE film_id = ?", film.getId());
 
-        if (!mergedGenres.isEmpty()) {
-            jdbc.batchUpdate(
-                    "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)",
-                    mergedGenres.stream()
-                            .map(genreId -> new Object[]{film.getId(), genreId})
-                            .collect(Collectors.toList())
-            );
-        }
+        List<Object[]> batchArgs = mergedGenres.stream()
+                .sorted(Comparator.comparing(Genre::getId))
+                .map(genre -> new Object[]{film.getId(), genre.getId()})
+                .collect(Collectors.toList());
+
+        jdbc.batchUpdate("INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)", batchArgs);
+
+        // Обновляем поле genres у фильма
+        film.setGenres(mergedGenres.stream()
+                .sorted(Comparator.comparing(Genre::getId))
+                .collect(Collectors.toCollection(LinkedHashSet::new)));
     }
 
     private void updateFilmDirector(Film film) {

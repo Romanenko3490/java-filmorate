@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Data
-public class Genre implements  Comparable<Genre>{
+public class Genre implements Comparable<Genre> {
     private Long id;
     private String name;
 

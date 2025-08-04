@@ -44,7 +44,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             "SELECT g.genre_id, g.name FROM film_genre fg " +
                     "JOIN genre g ON fg.genre_id = g.genre_id " +
                     "WHERE fg.film_id = ? ORDER BY g.genre_id";
-    ;
     // endregion
 
     private static final String INSERT_FILM_DIRECTOR_QUERY =

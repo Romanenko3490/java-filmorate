@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.dto;
 
 import lombok.Data;
 import ru.yandex.practicum.filmorate.model.film.Director;
-import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.model.film.Genre;
 import ru.yandex.practicum.filmorate.model.film.MpaRating;
 

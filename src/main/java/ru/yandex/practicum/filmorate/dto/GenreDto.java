@@ -14,4 +14,10 @@ public class GenreDto {
     private Long id;
     private String name;
 
+    @Override
+    public int compareTo(GenreDto other) {
+        return this.id.compareTo(other.getId());
+    }
+
+
 }

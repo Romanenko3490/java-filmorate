@@ -15,6 +15,7 @@ import ru.yandex.practicum.filmorate.dal.mappers.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.MpaDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -61,6 +62,7 @@ class FilmsTest {
         newFilmRequest.setDescription("Test Description");
         newFilmRequest.setReleaseDate(LocalDate.of(2000, 1, 1));
         newFilmRequest.setDuration(120);
+        newFilmRequest.setMpa(new MpaRating(1L, null, null));
 
         MpaRating mpa = new MpaRating();
         mpa.setId(1L);
@@ -85,7 +87,8 @@ class FilmsTest {
         assertThat(retrievedFilm.getName()).isEqualTo("Test Film");
         assertThat(retrievedFilm.getDescription()).isEqualTo("Test Description");
         assertThat(retrievedFilm.getDuration()).isEqualTo(120);
-        assertThat(retrievedFilm.getMpa()).isEqualTo(addedFilm.getMpa());
+        assertThat(retrievedFilm.getMpa().getId()).isEqualTo(1);
+        assertThat(retrievedFilm.getMpa()).isEqualTo(new MpaDto(1L, "G"));
     }
 
     @Test

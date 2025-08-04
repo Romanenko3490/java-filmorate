@@ -42,7 +42,7 @@ public class FilmDto {
                 .map(genre -> new GenreDto(genre.getId()))
                 .sorted((g1, g2) -> Long.compare(g1.getId(), g2.getId()))
                 .collect(Collectors.toList());
-        this.mpa = new MpaDto(mpa.getId());
+        this.mpa = new MpaDto(mpa.getId(), mpa.getName());
         this.directors = directors;
     }
 
@@ -54,6 +54,6 @@ public class FilmDto {
     }
 
     public void setMpa(MpaRating mpa) {
-        this.mpa = new MpaDto(mpa.getId());
+        this.mpa = new MpaDto(mpa.getId(), mpa.getName());
     }
 }

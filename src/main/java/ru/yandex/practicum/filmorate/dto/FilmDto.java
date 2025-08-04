@@ -46,16 +46,20 @@ public class FilmDto {
     }
 
     public void setGenres(Set<Genre> genres) {
-        this.genres.clear(); // Очищаем перед добавлением новых
+        this.genres.clear();
         if (genres != null) {
             this.genres.addAll(genres.stream()
                     .map(genre -> new GenreDto(genre.getId(), genre.getName()))
+                    .sorted()
                     .collect(Collectors.toList()));
         }
     }
 
     public void setGenresFromDto(Set<GenreDto> genres) {
-        this.genres = genres;
+        this.genres.clear();
+        this.genres.addAll(genres.stream()
+                .sorted()
+                .collect(Collectors.toList()));
     }
 
     public void setMpa(MpaRating mpa) {

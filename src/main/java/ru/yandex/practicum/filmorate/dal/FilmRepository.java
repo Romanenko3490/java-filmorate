@@ -327,28 +327,38 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     // region Genre Operations
     private void updateFilmGenres(Film film) {
-        Set<Genre> currentGenres = jdbc.query(GET_FILM_GENRES_QUERY,
-                        (rs, rowNum) -> new Genre(rs.getLong("genre_id"), rs.getString("name")),
-                        film.getId())
-                .stream()
-                .collect(Collectors.toSet());
+        checkFilm(film.getId());
 
-        Set<Genre> newGenres = film.getGenres() != null ?
-                new HashSet<>(film.getGenres()) :
-                Collections.emptySet();
+        // 1. Получаем текущие жанры фильма из БД
+        Set<Long> currentGenreIds = jdbc.query(
+                "SELECT genre_id FROM film_genre WHERE film_id = ?",
+                (rs, rowNum) -> rs.getLong("genre_id"),
+                film.getId()
+        ).stream().collect(Collectors.toSet());
 
-        if (currentGenres.containsAll(newGenres)) {
+        // 2. Получаем новые жанры из запроса (фильтруем null и дубликаты)
+        Set<Long> newGenreIds = film.getGenres() == null ? Set.of() :
+                film.getGenres().stream()
+                        .filter(Objects::nonNull)
+                        .map(Genre::getId)
+                        .collect(Collectors.toSet());
+
+        // 3. Если жанры не изменились - выходим
+        if (newGenreIds.equals(currentGenreIds)) {
             return;
         }
 
-        jdbc.update(DELETE_FILM_GENRES_QUERY, film.getId());
+        // 4. Удаляем старые связи
+        jdbc.update("DELETE FROM film_genre WHERE film_id = ?", film.getId());
 
-        if (!newGenres.isEmpty()) {
-            List<Object[]> batchArgs = newGenres.stream()
-                    .map(genre -> new Object[]{film.getId(), genre.getId()})
-                    .collect(Collectors.toList());
-
-            jdbc.batchUpdate(INSERT_FILM_GENRE_QUERY, batchArgs);
+        // 5. Добавляем новые связи (если есть)
+        if (!newGenreIds.isEmpty()) {
+            jdbc.batchUpdate(
+                    "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)",
+                    newGenreIds.stream()
+                            .map(genreId -> new Object[]{film.getId(), genreId})
+                            .collect(Collectors.toList())
+            );
         }
     }
 

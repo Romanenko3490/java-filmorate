@@ -9,7 +9,7 @@ import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.model.film.Film;
 
-import java.util.LinkedHashSet;
+import java.util.TreeSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,9 +27,9 @@ public class FilmMapper {
 
         // Обработка жанров
         if (request.getGenres() != null) {
-            film.setGenres(new LinkedHashSet<>(request.getGenres()));
+            film.setGenres(new TreeSet<>(request.getGenres()));
         } else {
-            film.setGenres(new LinkedHashSet<>());
+            film.setGenres(new TreeSet<>());
         }
 
         log.info("Mapping film, mpa: {}", request.getMpa());
@@ -47,7 +47,8 @@ public class FilmMapper {
         // Обработка жанров - всегда возвращаем Set, даже если пустой
         Set<GenreDto> genreDtos = film.getGenres().stream()
                 .map(genre -> new GenreDto(genre.getId(), genre.getName()))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+                .collect(Collectors.toCollection(TreeSet::new));
+
         filmDto.setGenresFromDto(genreDtos);
 
         // Обработка MPA
@@ -57,9 +58,9 @@ public class FilmMapper {
 
         // Обработка режиссеров
         if (film.getDirectors() != null) {
-            filmDto.setDirectors(new LinkedHashSet<>(film.getDirectors()));
+            filmDto.setDirectors(new TreeSet<>(film.getDirectors()));
         } else {
-            filmDto.setDirectors(new LinkedHashSet<>());
+            filmDto.setDirectors(new TreeSet<>());
         }
 
         return filmDto;
@@ -79,8 +80,7 @@ public class FilmMapper {
         }
 
         if (request.hasGenres()) {
-            // Обновляем жанры только если они переданы в запросе
-            film.setGenres(new LinkedHashSet<>(request.getGenres()));
+            film.setGenres(new TreeSet<>(request.getGenres()));
         }
 
         if (request.hasReleaseDate()) {

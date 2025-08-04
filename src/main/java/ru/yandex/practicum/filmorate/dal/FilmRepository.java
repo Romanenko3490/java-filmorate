@@ -43,7 +43,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private static final String GET_FILM_GENRES_QUERY =
             "SELECT g.genre_id, g.name FROM film_genre fg " +
                     "JOIN genre g ON fg.genre_id = g.genre_id " +
-                    "WHERE fg.film_id = ? ORDER BY g.genre_id";
+                    "WHERE fg.film_id = ? ORDER BY g.genre_id ASC";
     // endregion
 
     private static final String INSERT_FILM_DIRECTOR_QUERY =
@@ -327,11 +327,12 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     // region Genre Operations
     private void updateFilmGenres(Film film) {
-        checkFilm(film.getId());
         jdbc.update(DELETE_FILM_GENRES_QUERY, film.getId());
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            // Сортируем по id перед сохранением
             List<Object[]> batchArgs = film.getGenres().stream()
+                    .sorted(Comparator.comparing(Genre::getId))
                     .map(genre -> new Object[]{film.getId(), genre.getId()})
                     .collect(Collectors.toList());
 
@@ -355,14 +356,13 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     private void loadGenresForFilm(Film film) {
         List<Genre> genres = jdbc.query(GET_FILM_GENRES_QUERY, (rs, rowNum) -> {
             Genre genre = new Genre();
-            genre.setId(rs.getLong("genre_id"));
+            genre.setId(rs.getInt("genre_id"));
             genre.setName(rs.getString("name"));
             return genre;
         }, film.getId());
-        Set<Genre> sortedGenres = genres.stream()
-                .sorted(Comparator.comparing(Genre::getId))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
 
+        Set<Genre> sortedGenres = new TreeSet<>(Comparator.comparing(Genre::getId));
+        sortedGenres.addAll(genres);
         film.setGenres(sortedGenres);
     }
 

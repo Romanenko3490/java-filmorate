@@ -31,14 +31,14 @@ public class DirectorService {
     }
 
     public DirectorDto add(Director  director) {
-        if (director.getName() == null) {
-            throw new ValidationException("Name is required");
+        if (director.getName() == null || director.getName().isBlank()) {
+            throw new ValidationException("Director name is required");
         }
         return DirectorMapper.mapToDirectorDto(directorRepository.add(director));
     }
 
     public DirectorDto update(Director director) {
-        if (director.getName() == null) {
+        if (director.getName() == null || director.getName().isBlank()) {
             throw new ValidationException("Name is required");
         }
         validateAndReturn(director.getId());

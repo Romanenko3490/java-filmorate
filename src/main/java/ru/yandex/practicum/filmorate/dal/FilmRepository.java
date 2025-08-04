@@ -443,30 +443,30 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     //реализация Slope One алгоритма - ресурс (https://www.baeldung.com/java-collaborative-filtering-recommendations).
     public List<Film> getRecommendedFilms(long userId) {
-        // 1. Получаем все лайки пользователей
+        // Получаем все лайки пользователей
         List<Map<String, Object>> allLikes = jdbc.queryForList(GET_ALL_USER_LIKES);
 
-        // 2. Получаем фильмы, которые лайкнул текущий пользователь
+        // Получаем фильмы, которые лайкнул текущий пользователь
         List<Long> userLikedFilms = jdbc.queryForList(
                 GET_USER_LIKED_FILMS, Long.class, userId);
 
-        // 3. Строим матрицу пользователь-фильм
+        // Строим матрицу пользователь-фильм
         Map<Long, Map<Long, Integer>> userItemMatrix = buildUserItemMatrix(allLikes);
 
-        // 4. Вычисляем средние разницы между фильмами
+        // Вычисляем средние разницы между фильмами
         Map<Long, Map<Long, Double>> deviations = computeDeviations(userItemMatrix);
 
-        // 5. Получаем предсказанные оценки для непросмотренных фильмов
+        // Получаем предсказанные оценки для непросмотренных фильмов
         Map<Long, Double> predictions = predictRatings(
                 userId, userLikedFilms, userItemMatrix, deviations);
 
-        // 6. Сортируем фильмы по предсказанным оценкам
+        // Сортируем фильмы по предсказанным оценкам
         List<Long> recommendedFilmIds = predictions.entrySet().stream()
                 .sorted(Map.Entry.<Long, Double>comparingByValue().reversed())
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
 
-        // 7. Получаем полную информацию о фильмах
+        // Получаем полную информацию о фильмах
         return getFilmsByIds(recommendedFilmIds);
     }
 
@@ -608,16 +608,12 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             String normalizedBy = by.toLowerCase().replaceAll("\\s", "");
 
             if (normalizedBy.contains("title") && normalizedBy.contains("director")) {
-                // Поиск и по названию, и по режиссёру
                 films = jdbc.query(SEARCH_FILMS_BY_TITLE_AND_DIRECTOR_QUERY, mapper, searchPattern, searchPattern);
             } else if (normalizedBy.contains("title")) {
-                // Поиск только по названию
                 films = jdbc.query(SEARCH_FILMS_BY_TITLE_QUERY, mapper, searchPattern);
             } else if (normalizedBy.contains("director")) {
-                // Поиск только по режиссёру
                 films = jdbc.query(SEARCH_FILMS_BY_DIRECTOR_QUERY, mapper, searchPattern);
             } else {
-                // Неизвестный параметр by, ищем по названию по умолчанию
                 films = jdbc.query(SEARCH_FILMS_BY_TITLE_QUERY, mapper, searchPattern);
             }
         }
@@ -633,5 +629,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     public List<Film> getCommonFilms(long userId, long friendId) {
         return jdbc.query(GET_COMMON_FILMS_QUERY, mapper, userId, friendId);
     }
+    //endregion
 
 }

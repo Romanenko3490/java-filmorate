@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.dal;
 
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -14,14 +13,14 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
-@RequiredArgsConstructor
-public class FeedRepositoryImpl implements FeedRepository {
-    private final JdbcTemplate jdbc;
-    private final RowMapper<FeedEvent> mapper;
+public class FeedRepositoryImpl extends BaseRepository<FeedEvent> implements FeedRepository {
     private static final String GET_FEED_QUERY =
             "SELECT event_id, user_id, event_type, operation, entity_id, timestamp " +
                     "FROM feed WHERE user_id = ? ORDER BY timestamp ASC";
 
+    public FeedRepositoryImpl(JdbcTemplate jdbc, RowMapper<FeedEvent> mapper) {
+        super(jdbc, mapper);
+    }
 
     @Override
     public List<FeedEvent> getFeedByUserId(Long userId) {

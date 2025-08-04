@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.filmorate.controller.UserDbController;
 import ru.yandex.practicum.filmorate.dal.*;
 import ru.yandex.practicum.filmorate.dal.mappers.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
@@ -220,11 +219,9 @@ class FilmsTest {
 
     @Test
     void shouldGetCommonFilms() {
-        // Создаем двух пользователей
         Long user1Id = 1L;
         Long user2Id = 2L;
 
-        // Создаем несколько фильмов
         FilmDto film1 = filmDbService.addFilm(newFilmRequest);
 
         NewFilmRequest anotherFilm = new NewFilmRequest();
@@ -237,21 +234,18 @@ class FilmsTest {
         anotherFilm.setMpa(mpa);
         FilmDto film2 = filmDbService.addFilm(anotherFilm);
 
-        // Добавляем лайки
         filmDbService.addLike(film1.getId(), user1Id);
         filmDbService.addLike(film2.getId(), user1Id); // Общий фильм
         filmDbService.addLike(film2.getId(), user2Id); // Общий фильм
 
-        // Получаем общие фильмы
+
         List<FilmDto> commonFilms = filmDbService.getCommonFilms(user1Id, user2Id);
 
-        // Проверяем результаты
         assertThat(commonFilms)
                 .hasSize(1)
                 .extracting(FilmDto::getId)
                 .containsExactly(film2.getId());
 
-        // Проверяем сортировку по популярности (если добавим больше фильмов)
         NewFilmRequest thirdFilm = new NewFilmRequest();
         thirdFilm.setName("Most Popular Common Film");
         thirdFilm.setDescription("Most popular film liked by both");

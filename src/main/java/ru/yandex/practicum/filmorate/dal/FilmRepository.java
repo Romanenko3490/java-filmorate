@@ -375,8 +375,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     .collect(Collectors.toList());
 
             jdbc.batchUpdate(INSERT_FILM_DIRECTOR_QUERY, batchArgs);
-        } else {
-            film.setDirectors(null);
         }
     }
 

@@ -90,7 +90,8 @@ public class FilmDbService {
         if (request.getDuration() != null) film.setDuration(request.getDuration());
         if (request.getMpa() != null) film.setMpa(request.getMpa());
         if (request.getGenres() != null) film.setGenres(request.getGenres());
-        if (request.getDirectors() != null) film.setDirectors(request.getDirectors());
+
+        film.setDirectors(request.getDirectors());
 
         filmRepository.updateFilm(film);
         return FilmMapper.mapToFilmDto(film);

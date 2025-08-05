@@ -31,8 +31,7 @@ public class FeedService {
 
 
     private void addEvent(FeedEventDto eventDto) {
-        ;
-        log.error("Adding new event {}", eventDto);
+        log.debug("Adding new event {}", eventDto);
         feedRepository.addEvent(mapper.toFeedEvent(eventDto));
     }
 

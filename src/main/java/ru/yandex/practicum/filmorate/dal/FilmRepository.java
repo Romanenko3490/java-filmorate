@@ -284,16 +284,19 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             log.debug("Executing popular films query with genreId: {}, year: {}, limit: {}", genreId, year, limit);
             List<Film> films = jdbc.query(GET_POPULAR_FILMS_BY_GENRE_AND_YEAR_QUERY, mapper, genreId, year, limit);
             loadGenresForFilms(films);
+            loadDirectorsForFilms(films);
             return films;
         } else if (genreId != null && year == null) {
             log.debug("Executing popular films query with genreId: {}, limit: {}", genreId, limit);
             List<Film> films = jdbc.query(GET_POPULAR_FILMS_BY_GENRE_QUERY, mapper, genreId, limit);
             loadGenresForFilms(films);
+            loadDirectorsForFilms(films);
             return films;
         } else if (year != null && genreId == null) {
             log.debug("Executing popular films query with year: {}, limit: {}", year, limit);
             List<Film> films = jdbc.query(GET_POPULAR_FILMS_BY_YEAR_QUERY, mapper, year, limit);
             loadGenresForFilms(films);
+            loadDirectorsForFilms(films);
             return films;
         } else {
             log.debug("Executing popular films query with limit: {}", limit);
@@ -637,10 +640,8 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
         List<Film> films;
 
         if (by == null || by.trim().isEmpty()) {
-            // Если параметр by не указан, ищем по названию по умолчанию
             films = jdbc.query(SEARCH_FILMS_BY_TITLE_QUERY, mapper, searchPattern);
         } else {
-            // Нормализуем параметр by - убираем пробелы и приводим к нижнему регистру
             String normalizedBy = by.toLowerCase().replaceAll("\\s", "");
 
             if (normalizedBy.contains("title") && normalizedBy.contains("director")) {

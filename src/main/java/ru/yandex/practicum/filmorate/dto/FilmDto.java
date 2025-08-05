@@ -21,7 +21,7 @@ public class FilmDto {
     private Integer duration;
     private Set<GenreDto> genres;
     private MpaDto mpa;
-    private Set<Director> directors = new  LinkedHashSet<>();
+    private Set<Director> directors = new LinkedHashSet<>();
 
     public FilmDto() {
     }

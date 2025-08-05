@@ -10,7 +10,6 @@ public class EntityChecker implements Checker {
     private final JdbcTemplate jdbc;
 
 
-
     @Override
     public boolean userExist(long userId) {
         String query = "SELECT COUNT(*) FROM users WHERE user_id = ?";

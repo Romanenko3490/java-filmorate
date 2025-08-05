@@ -6,7 +6,9 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.film.Genre;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Repository
@@ -29,7 +31,7 @@ public class GenreRepositoryImpl extends BaseRepository<Genre> implements GenreR
     public GenreRepositoryImpl(JdbcTemplate jdbc, Checker checker) {
         super(jdbc, (rs, rowNum)
                 -> new Genre(rs.getInt("genre_id"),
-                rs.getString("name")),checker);
+                rs.getString("name")), checker);
     }
 
     @Override

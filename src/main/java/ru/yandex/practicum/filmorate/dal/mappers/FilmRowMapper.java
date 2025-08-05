@@ -18,14 +18,14 @@ public class FilmRowMapper implements RowMapper<Film> {
         film.setDescription(rs.getString("description"));
         film.setReleaseDate(rs.getDate("release_date").toLocalDate());
         film.setDuration(rs.getInt("duration"));
-        if (hasColumn(rs, "mpa_name")) { // Проверяем наличие столбца
+        if (hasColumn(rs, "mpa_name")) {
             String mpaName = rs.getString("mpa_name");
             if (mpaName != null) {
                 MpaRating mpa = new MpaRating();
                 mpa.setId(rs.getLong("mpa_id"));
                 mpa.setName(mpaName);
                 mpa.setDescription(rs.getString("mpa_description"));
-                film.setMpa(mpa);
+                film.getMpa().add(mpa);
             }
         }
         return film;

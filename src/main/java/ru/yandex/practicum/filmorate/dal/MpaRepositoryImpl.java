@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.film.MpaRating;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Repository
@@ -17,6 +18,9 @@ public class MpaRepositoryImpl extends BaseRepository<MpaRating> implements MpaR
             "SELECT * FROM mpa_rating WHERE mpa_id = ?";
     private static final String FIND_ALL_QUERY =
             "SELECT * FROM mpa_rating ORDER BY mpa_id";
+    private static final String FIND_EXISTING_MPA_IDS_BASE_QUERY =
+            "SELECT mpa_id FROM mpa_rating WHERE mpa_id IN (%s)";
+
 
     public MpaRepositoryImpl(JdbcTemplate jdbc, Checker checker) {
         super(jdbc, (rs, rowNum) -> {
@@ -44,5 +48,10 @@ public class MpaRepositoryImpl extends BaseRepository<MpaRating> implements MpaR
     public List<MpaRating> findAll() {
         log.debug("Getting all MPA ratings");
         return super.findAll(FIND_ALL_QUERY);
+    }
+
+    @Override
+    public Set<Long> findAllExistingIds(Set<Long> ids) {
+        return super.findAllExistingIds(FIND_EXISTING_MPA_IDS_BASE_QUERY, ids);
     }
 }

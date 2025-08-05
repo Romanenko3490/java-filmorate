@@ -11,18 +11,18 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.dal.*;
 import ru.yandex.practicum.filmorate.dal.mappers.*;
-import ru.yandex.practicum.filmorate.dto.FeedEventDto;
-import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
-import ru.yandex.practicum.filmorate.dto.NewReviewRequest;
-import ru.yandex.practicum.filmorate.dto.ReviewDto;
+import ru.yandex.practicum.filmorate.dto.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.FeedEventMapper;
 import ru.yandex.practicum.filmorate.model.FeedEvent;
 import ru.yandex.practicum.filmorate.model.film.MpaRating;
+
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -59,9 +59,6 @@ class FeedTest {
     private FeedService feedService;
 
     @Autowired
-    private EntityCheckService entityCheckService;
-
-    @Autowired
     private UserDbService userDbService;
 
     @Autowired
@@ -76,29 +73,19 @@ class FeedTest {
     private static final long EXISTING_USER_ID_1 = 1L;
     private static final long EXISTING_USER_ID_2 = 2L;
     private long testFilmId;
+    private long testReviewId;
 
     @BeforeEach
     void setUp() {
-        // Очищаем ленту перед каждым тестом
-        jdbcTemplate.update("DELETE FROM feed");
-        log.info("Cleared feed table");
-
-        // Проверяем существование тестовых пользователей
-        assertUserExists(EXISTING_USER_ID_1);
-        assertUserExists(EXISTING_USER_ID_2);
-
-        // Создаем тестовый фильм
+        clearFeedTable();
         testFilmId = createTestFilm();
-        log.info("Created test film with id: {}", testFilmId);
+        testReviewId = createTestReview();
+        log.info("Test setup complete - created film with id: {} and review with id: {}", testFilmId, testReviewId);
     }
 
-    private void assertUserExists(long userId) {
-        Integer count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM users WHERE user_id = ?",
-                Integer.class,
-                userId
-        );
-        assertThat(count).isEqualTo(1);
+    private void clearFeedTable() {
+        jdbcTemplate.update("DELETE FROM feed");
+        log.debug("Cleared feed table");
     }
 
     private long createTestFilm() {
@@ -107,106 +94,78 @@ class FeedTest {
         filmRequest.setDescription("Test Description");
         filmRequest.setReleaseDate(LocalDate.of(2000, 1, 1));
         filmRequest.setDuration(120);
-        MpaRating mpa = new MpaRating();
-        mpa.setId(1L);
-        filmRequest.setMpa(mpa);
+
+        Set<MpaRating> mpaRatings = Set.of(new MpaRating(1L, "G", "General Audiences"));
+        filmRequest.setMpa(mpaRatings);
+        filmRequest.setDirectors(Set.of());
+
         return filmDbService.addFilm(filmRequest).getId();
     }
 
-    private void printFeedTableContent() {
-        List<Map<String, Object>> feedContent = jdbcTemplate.queryForList("SELECT * FROM feed");
-        log.info("Current feed table content ({} rows):", feedContent.size());
-        feedContent.forEach(row -> log.info("Feed entry: {}", row));
+    private long createTestReview() {
+        NewReviewRequest request = new NewReviewRequest();
+        request.setContent("Test review");
+        request.setIsPositive(true);
+        request.setUserId(EXISTING_USER_ID_1);
+        request.setFilmId(testFilmId);
+
+        return reviewService.createReview(request).getReviewId();
     }
 
-    private void printFriendshipTableContent() {
-        List<Map<String, Object>> content = jdbcTemplate.queryForList("SELECT * FROM friendship");
-        log.info("Current friendship table content ({} rows):", content.size());
-        content.forEach(row -> log.info("Friendship entry: {}", row));
+    private void printFeedTableContent() {
+        List<Map<String, Object>> feedContent = jdbcTemplate.queryForList("SELECT * FROM feed ORDER BY timestamp");
+        log.info("Feed table content ({} rows):", feedContent.size());
+        feedContent.forEach(row -> log.info("{} | {} | {} | {} | {}",
+                row.get("event_id"),
+                row.get("user_id"),
+                row.get("event_type"),
+                row.get("operation"),
+                row.get("entity_id")));
     }
 
     @Test
     void getFeedByUserId_shouldReturnEmptyListForUserWithoutEvents() {
-        printFeedTableContent();
         List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
         assertThat(feed).isEmpty();
     }
 
     @Test
-    void addFriendEvent_shouldCreateFriendEvent() {
-        // 1. Добавляем друга через сервис
-        log.info("Adding friend {} to user {}", EXISTING_USER_ID_2, EXISTING_USER_ID_1);
+    void addFriendEvent_shouldCreateFriendAddEvent() {
+        // When
         userDbService.addFriend(EXISTING_USER_ID_1, EXISTING_USER_ID_2);
-
-        // 2. Вручную добавляем событие в ленту (как это делает контроллер)
         feedService.addFriendEvent(EXISTING_USER_ID_1, EXISTING_USER_ID_2);
 
-        printFriendshipTableContent();
-        printFeedTableContent();
-
-        // 3. Проверяем в БД напрямую
-        Integer dbCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM feed WHERE user_id = ? AND event_type = 'FRIEND' AND operation = 'ADD'",
-                Integer.class,
-                EXISTING_USER_ID_1
-        );
-        log.info("Found {} FRIEND/ADD events in DB", dbCount);
-        assertThat(dbCount).isEqualTo(1);
-
-        // 4. Проверяем через сервис
+        // Then
         List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
-        log.info("Feed from service: {}", feed);
-
         assertThat(feed)
                 .hasSize(1)
                 .first()
                 .satisfies(event -> {
+                    assertThat(event.getUserId()).isEqualTo(EXISTING_USER_ID_1);
                     assertThat(event.getEventType()).isEqualTo(FeedEvent.EventType.FRIEND);
                     assertThat(event.getOperation()).isEqualTo(FeedEvent.Operation.ADD);
                     assertThat(event.getEntityId()).isEqualTo(EXISTING_USER_ID_2);
-                    assertThat(event.getUserId()).isEqualTo(EXISTING_USER_ID_1);
+                    assertThat(event.getTimestamp()).isPositive();
                 });
     }
 
     @Test
-    void removeFriendEvent_shouldCreateRemoveOperationEvent() {
-        // 1. Добавляем друга
+    void removeFriendEvent_shouldCreateFriendRemoveEvent() {
+        // Setup - add friend first
         userDbService.addFriend(EXISTING_USER_ID_1, EXISTING_USER_ID_2);
         feedService.addFriendEvent(EXISTING_USER_ID_1, EXISTING_USER_ID_2);
 
-        // 2. Проверяем, что событие добавления записалось
-        Integer addCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM feed WHERE user_id = ? AND operation = 'ADD'",
-                Integer.class,
-                EXISTING_USER_ID_1
-        );
-        assertThat(addCount).isEqualTo(1);
-
-        // 3. Удаляем друга
+        // When
         userDbService.removeFriend(EXISTING_USER_ID_1, EXISTING_USER_ID_2);
         feedService.removeFriendEvent(EXISTING_USER_ID_1, EXISTING_USER_ID_2);
-        printFeedTableContent();
 
-        // 4. Проверяем оба события в БД
-        Integer totalCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM feed WHERE user_id = ?",
-                Integer.class,
-                EXISTING_USER_ID_1
-        );
-        assertThat(totalCount).isEqualTo(2);
-
-        // 5. Проверяем через сервис
+        // Then
         List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
         assertThat(feed)
                 .hasSize(2)
                 .satisfiesExactly(
-                        addEvent -> {
-                            assertThat(addEvent.getEventType()).isEqualTo(FeedEvent.EventType.FRIEND);
-                            assertThat(addEvent.getOperation()).isEqualTo(FeedEvent.Operation.ADD);
-                            assertThat(addEvent.getEntityId()).isEqualTo(EXISTING_USER_ID_2);
-                        },
+                        addEvent -> assertThat(addEvent.getOperation()).isEqualTo(FeedEvent.Operation.ADD),
                         removeEvent -> {
-                            assertThat(removeEvent.getEventType()).isEqualTo(FeedEvent.EventType.FRIEND);
                             assertThat(removeEvent.getOperation()).isEqualTo(FeedEvent.Operation.REMOVE);
                             assertThat(removeEvent.getEntityId()).isEqualTo(EXISTING_USER_ID_2);
                         }
@@ -214,21 +173,12 @@ class FeedTest {
     }
 
     @Test
-    void addLikeEvent_shouldCreateLikeEvent() {
-        // 1. Добавляем лайк
+    void addLikeEvent_shouldCreateLikeAddEvent() {
+        // When
         filmDbService.addLike(testFilmId, EXISTING_USER_ID_1);
         feedService.addFilmLikeEvent(EXISTING_USER_ID_1, testFilmId);
-        printFeedTableContent();
 
-        // 2. Проверяем в БД
-        Integer dbCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM feed WHERE user_id = ? AND event_type = 'LIKE'",
-                Integer.class,
-                EXISTING_USER_ID_1
-        );
-        assertThat(dbCount).isEqualTo(1);
-
-        // 3. Проверяем через сервис
+        // Then
         List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
         assertThat(feed)
                 .hasSize(1)
@@ -241,26 +191,59 @@ class FeedTest {
     }
 
     @Test
-    void removeLikeEvent_shouldCreateRemoveOperation() throws InterruptedException {
-        // 1. Добавляем лайк
+    void removeLikeEvent_shouldCreateLikeRemoveEvent() {
+        // Setup - add like first
         filmDbService.addLike(testFilmId, EXISTING_USER_ID_1);
         feedService.addFilmLikeEvent(EXISTING_USER_ID_1, testFilmId);
-        Thread.sleep(10);
 
-        // 2. Удаляем лайк
+        // When
         filmDbService.removeLike(testFilmId, EXISTING_USER_ID_1);
         feedService.removeFilmLikeEvent(EXISTING_USER_ID_1, testFilmId);
-        printFeedTableContent();
 
-        // 3. Проверяем в БД
-        Integer dbCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM feed WHERE user_id = ? AND event_type = 'LIKE'",
-                Integer.class,
-                EXISTING_USER_ID_1
-        );
-        assertThat(dbCount).isEqualTo(2);
+        // Then
+        List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
+        assertThat(feed)
+                .hasSize(2)
+                .satisfiesExactly(
+                        addEvent -> assertThat(addEvent.getOperation()).isEqualTo(FeedEvent.Operation.ADD),
+                        removeEvent -> assertThat(removeEvent.getOperation()).isEqualTo(FeedEvent.Operation.REMOVE)
+                );
+    }
 
-        // 4. Проверяем через сервис
+    @Test
+    void reviewEvents_shouldCreateCorrectEvents() {
+        // When
+        feedService.addReviewEvent(EXISTING_USER_ID_1, testReviewId);
+        feedService.updateReviewEvent(testReviewId);
+        feedService.removeReviewEvent(testReviewId);
+
+        // Then
+        List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
+        assertThat(feed)
+                .hasSize(3)
+                .satisfiesExactly(
+                        addEvent -> {
+                            assertThat(addEvent.getEventType()).isEqualTo(FeedEvent.EventType.REVIEW);
+                            assertThat(addEvent.getOperation()).isEqualTo(FeedEvent.Operation.ADD);
+                        },
+                        updateEvent -> {
+                            assertThat(updateEvent.getEventType()).isEqualTo(FeedEvent.EventType.REVIEW);
+                            assertThat(updateEvent.getOperation()).isEqualTo(FeedEvent.Operation.UPDATE);
+                        },
+                        removeEvent -> {
+                            assertThat(removeEvent.getEventType()).isEqualTo(FeedEvent.EventType.REVIEW);
+                            assertThat(removeEvent.getOperation()).isEqualTo(FeedEvent.Operation.REMOVE);
+                        }
+                );
+    }
+
+    @Test
+    void reviewLikeEvents_shouldCreateCorrectEvents() {
+        // When
+        feedService.addReviewLikeEvent(EXISTING_USER_ID_1, testReviewId);
+        feedService.removeReviewLikeEvent(EXISTING_USER_ID_1, testReviewId);
+
+        // Then
         List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
         assertThat(feed)
                 .hasSize(2)
@@ -277,58 +260,40 @@ class FeedTest {
     }
 
     @Test
-    void addReviewEvent_shouldCreateReviewEvent() {
-        // 1. Создаем отзыв
-        NewReviewRequest request = new NewReviewRequest();
-        request.setContent("Test review");
-        request.setIsPositive(true);
-        request.setUserId(EXISTING_USER_ID_1);
-        request.setFilmId(testFilmId);
-
-        ReviewDto review = reviewService.createReview(request);
-        feedService.addReviewEvent(EXISTING_USER_ID_1, review.getReviewId());
-        printFeedTableContent();
-
-        // 2. Проверяем в БД
-        Integer dbCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM feed WHERE user_id = ? AND event_type = 'REVIEW'",
-                Integer.class,
-                EXISTING_USER_ID_1
-        );
-        assertThat(dbCount).isEqualTo(1);
-
-        // 3. Проверяем через сервис
-        List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
-        assertThat(feed)
-                .hasSize(1)
-                .first()
-                .satisfies(event -> {
-                    assertThat(event.getEventType()).isEqualTo(FeedEvent.EventType.REVIEW);
-                    assertThat(event.getOperation()).isEqualTo(FeedEvent.Operation.ADD);
-                    assertThat(event.getEntityId()).isEqualTo(review.getReviewId());
-                });
-    }
-
-    @Test
-    void events_shouldHaveCorrectTimestamps() {
-        // 1. Добавляем события
-        filmDbService.addLike(testFilmId, EXISTING_USER_ID_1);
-        feedService.addFilmLikeEvent(EXISTING_USER_ID_1, testFilmId);
-
-        userDbService.addFriend(EXISTING_USER_ID_1, EXISTING_USER_ID_2);
+    void events_shouldBeOrderedByTimestamp() {
+        // When
         feedService.addFriendEvent(EXISTING_USER_ID_1, EXISTING_USER_ID_2);
+        feedService.addFilmLikeEvent(EXISTING_USER_ID_1, testFilmId);
+        feedService.addReviewEvent(EXISTING_USER_ID_1, testReviewId);
 
-        printFeedTableContent();
-
-        // 2. Проверяем порядок
+        // Then
         List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
         assertThat(feed)
-                .hasSize(2)
+                .hasSize(3)
                 .isSortedAccordingTo(Comparator.comparing(FeedEventDto::getTimestamp));
     }
 
     @Test
     void getFeedByUserId_shouldThrowForNonExistentUser() {
         assertThrows(NotFoundException.class, () -> feedService.getFeedByUserId(999L));
+    }
+
+    @Test
+    void multipleEventTypes_shouldBeHandledCorrectly() {
+        // When
+        feedService.addFriendEvent(EXISTING_USER_ID_1, EXISTING_USER_ID_2);
+        feedService.addFilmLikeEvent(EXISTING_USER_ID_1, testFilmId);
+        feedService.addReviewEvent(EXISTING_USER_ID_1, testReviewId);
+
+        // Then
+        List<FeedEventDto> feed = feedService.getFeedByUserId(EXISTING_USER_ID_1);
+        assertThat(feed)
+                .hasSize(3)
+                .extracting(FeedEventDto::getEventType)
+                .containsExactlyInAnyOrder(
+                        FeedEvent.EventType.FRIEND,
+                        FeedEvent.EventType.LIKE,
+                        FeedEvent.EventType.REVIEW
+                );
     }
 }

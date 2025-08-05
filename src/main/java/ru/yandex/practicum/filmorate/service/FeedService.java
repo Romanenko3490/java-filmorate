@@ -31,7 +31,6 @@ public class FeedService {
 
 
     private void addEvent(FeedEventDto eventDto) {
-        entityCheckService.checkUserExists(eventDto.getUserId());
         log.error("Adding new event {}", eventDto);
         feedRepository.addEvent(mapper.toFeedEvent(eventDto));
     }
@@ -39,6 +38,7 @@ public class FeedService {
     // Friends events
     public void addFriendEvent(long userId, long friendId) {
         entityCheckService.checkUserExists(userId);
+        entityCheckService.checkUserExists(friendId);
         addEvent(new FeedEventDto(null, userId, FeedEvent.EventType.FRIEND, FeedEvent.Operation.ADD, friendId, Instant.now().toEpochMilli()));
     }
 
@@ -69,13 +69,13 @@ public class FeedService {
     }
 
     public void updateReviewEvent(long reviewId) {
-        entityCheckService.checkUserExists(reviewId);
+        entityCheckService.checkReviewExists(reviewId);
         Long userId = reviewService.getReviewAuthorId(reviewId);
         addEvent(new FeedEventDto(null, userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.UPDATE, reviewId, Instant.now().toEpochMilli()));
     }
 
     public void removeReviewEvent(long reviewId) {
-        entityCheckService.checkUserExists(reviewId);
+        entityCheckService.checkReviewExists(reviewId);
         Long userId = reviewService.getReviewAuthorId(reviewId);
         addEvent(new FeedEventDto(null, userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.REMOVE, reviewId, Instant.now().toEpochMilli()));
     }

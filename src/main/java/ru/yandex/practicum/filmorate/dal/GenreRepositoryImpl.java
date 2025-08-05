@@ -19,8 +19,6 @@ public class GenreRepositoryImpl extends BaseRepository<Genre> implements GenreR
             "SELECT * FROM genre ORDER BY genre_id";
     private static final String FIND_EXISTING_IDS_BASE_QUERY =
             "SELECT genre_id FROM genre WHERE genre_id IN (%s)";
-    private static final String DELETE_FILM_GENRES_QUERY =
-            "DELETE FROM film_genre WHERE film_id = ?";
 
 
     private final RowMapper<Genre> genreRowMapper = (rs, rowNum) ->

@@ -19,6 +19,7 @@ import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.film.Director;
 import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.model.film.Genre;
+import ru.yandex.practicum.filmorate.model.film.MpaRating;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -53,8 +54,20 @@ public class FilmDbService {
     }
 
     public FilmDto addFilm(NewFilmRequest request) {
-        if (!mpaRepository.existsById(request.getMpa().getId())) {
-            throw new NotFoundException("MPA rating with id " + request.getMpa().getId() + " not found");
+        if (request.getMpa() != null && !request.getMpa().isEmpty()) {
+            Set<Long> mpaIds = request.getMpa().stream()
+                    .map(MpaRating::getId)
+                    .collect(Collectors.toSet());
+
+            Set<Long> existingMpaIds = mpaRepository.findAllExistingIds(mpaIds);
+
+            Set<Long> missingMpaIds = mpaIds.stream()
+                    .filter(id -> !existingMpaIds.contains(id))
+                    .collect(Collectors.toSet());
+
+            if (!missingMpaIds.isEmpty()) {
+                throw new NotFoundException("Genres with ids " + missingMpaIds + " not found");
+            }
         }
 
         if (request.getGenres() != null && !request.getGenres().isEmpty()) {

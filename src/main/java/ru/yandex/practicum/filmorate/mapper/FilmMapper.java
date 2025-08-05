@@ -3,12 +3,8 @@ package ru.yandex.practicum.filmorate.mapper;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.filmorate.dto.FilmDto;
-import ru.yandex.practicum.filmorate.dto.GenreDto;
-import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
-import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
+import ru.yandex.practicum.filmorate.dto.*;
 import ru.yandex.practicum.filmorate.model.film.Film;
-import ru.yandex.practicum.filmorate.model.film.MpaRating;
 
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -32,6 +28,13 @@ public class FilmMapper {
             film.setGenres(new LinkedHashSet<>(request.getGenres()));
         } else {
             film.setGenres(new LinkedHashSet<>());
+        }
+
+        //mpa
+        if (request.getMpa() != null) {
+            film.setMpa(new LinkedHashSet<>(request.getMpa()));
+        } else {
+            film.setMpa(new LinkedHashSet<>());
         }
 
         log.info("Mapping film, mpa: {}", request.getMpa());
@@ -61,9 +64,14 @@ public class FilmMapper {
 
         // Обработка MPA
         if (film.getMpa() != null) {
-            filmDto.setMpa(new MpaRating(film.getMpa().getId(), film.getMpa().getName(), film.getMpa().getDescription()));
+            Set<MpaDto> mpaDtos = film.getMpa().stream()
+                    .filter(Objects::nonNull)
+                    .map(mpa -> new MpaDto(mpa.getId(), mpa.getName()))
+                    .sorted()
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+            filmDto.setMpaFromDto(mpaDtos);
         } else {
-            filmDto.setMpa(new  MpaRating());
+            filmDto.setMpaFromDto(null);
         }
 
         // Обработка режиссеров

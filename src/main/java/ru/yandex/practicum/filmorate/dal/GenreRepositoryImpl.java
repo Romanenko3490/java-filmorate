@@ -6,9 +6,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.film.Genre;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @Repository
@@ -21,6 +19,8 @@ public class GenreRepositoryImpl extends BaseRepository<Genre> implements GenreR
             "SELECT * FROM genre ORDER BY genre_id";
     private static final String FIND_EXISTING_IDS_BASE_QUERY =
             "SELECT genre_id FROM genre WHERE genre_id IN (%s)";
+    private static final String DELETE_FILM_GENRES_QUERY =
+            "DELETE FROM film_genre WHERE film_id = ?";
 
 
     private final RowMapper<Genre> genreRowMapper = (rs, rowNum) ->
@@ -29,7 +29,7 @@ public class GenreRepositoryImpl extends BaseRepository<Genre> implements GenreR
     public GenreRepositoryImpl(JdbcTemplate jdbc, Checker checker) {
         super(jdbc, (rs, rowNum)
                 -> new Genre(rs.getInt("genre_id"),
-                rs.getString("name")), checker);
+                rs.getString("name")),checker);
     }
 
     @Override

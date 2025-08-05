@@ -62,15 +62,15 @@ class ReviewTest {
     @BeforeEach
     void setUp() {
         jdbcTemplate.update(
-                "INSERT INTO films (film_id, name, description, release_date, duration) " +
-                        "VALUES (?, ?, ?, ?, ?)",
-                1L, "Test Film", "Description", LocalDate.of(2000, 1, 1), 120
+                "INSERT INTO films (film_id, name, description, release_date, duration, mpa_rating_id) " +
+                        "VALUES (?, ?, ?, ?, ?, ?)",
+                1L, "Test Film", "Description", LocalDate.of(2000, 1, 1), 120, 1  // Используем существующий mpa_id=1
         );
 
         jdbcTemplate.update(
-                "INSERT INTO films (film_id, name, description, release_date, duration) " +
-                        "VALUES (?, ?, ?, ?, ?)",
-                2L, "Another Film", "Another Description", LocalDate.of(2001, 1, 1), 90
+                "INSERT INTO films (film_id, name, description, release_date, duration, mpa_rating_id) " +
+                        "VALUES (?, ?, ?, ?, ?, ?)",
+                2L, "Another Film", "Another Description", LocalDate.of(2001, 1, 1), 90, 2  // Используем существующий mpa_id=2
         );
 
         newReviewRequest = new NewReviewRequest();

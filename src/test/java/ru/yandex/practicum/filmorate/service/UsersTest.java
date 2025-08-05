@@ -229,9 +229,9 @@ class UsersTest {
     void shouldDeleteUserWithReviewsAndLikes() {
         UserDto user = userDbService.createUser(newUserRequest);
 
-        jdbcTemplate.update("INSERT INTO films (name, description, release_date, duration) " +
-                        "VALUES (?, ?, ?, ?)",
-                "Test Film", "Desc", LocalDate.now(), 120);
+        jdbcTemplate.update("INSERT INTO films (name, description, release_date, duration, mpa_rating_id) " +
+                        "VALUES (?, ?, ?, ?, ?)",
+                "Test Film", "Desc", LocalDate.now(), 120, 1);
 
         Long filmId = jdbcTemplate.queryForObject("SELECT film_id FROM films LIMIT 1", Long.class);
 
@@ -293,10 +293,10 @@ class UsersTest {
         jdbcTemplate.update("INSERT INTO users (user_id, email, login, name, birthday) VALUES (3, 'user3@example.com', 'login3', 'User Three', '2000-01-01')");
 
         // Добавление фильмов
-        jdbcTemplate.update("INSERT INTO films (film_id, name, description, release_date, duration) VALUES (1, 'Film 1', 'Description 1', CURRENT_DATE, 120)");
-        jdbcTemplate.update("INSERT INTO films (film_id, name, description, release_date, duration) VALUES (2, 'Film 2', 'Description 2', CURRENT_DATE, 90)");
-        jdbcTemplate.update("INSERT INTO films (film_id, name, description, release_date, duration) VALUES (3, 'Film 3', 'Description 3', CURRENT_DATE, 150)");
-        jdbcTemplate.update("INSERT INTO films (film_id, name, description, release_date, duration) VALUES (4, 'Film 4', 'Description 4', CURRENT_DATE, 100)");
+        jdbcTemplate.update("INSERT INTO films (film_id, name, description, release_date, duration, mpa_rating_id) VALUES (1, 'Film 1', 'Description 1', CURRENT_DATE, 120, 1)");
+        jdbcTemplate.update("INSERT INTO films (film_id, name, description, release_date, duration, mpa_rating_id) VALUES (2, 'Film 2', 'Description 2', CURRENT_DATE, 90, 2)");
+        jdbcTemplate.update("INSERT INTO films (film_id, name, description, release_date, duration, mpa_rating_id) VALUES (3, 'Film 3', 'Description 3', CURRENT_DATE, 150, 3)");
+        jdbcTemplate.update("INSERT INTO films (film_id, name, description, release_date, duration, mpa_rating_id) VALUES (4, 'Film 4', 'Description 4', CURRENT_DATE, 100, 4)");
 
         // Добавление лайков
         jdbcTemplate.update("INSERT INTO film_likes (film_id, user_id) VALUES (1, 1)");
@@ -317,8 +317,8 @@ class UsersTest {
 
     @Test
     void shouldReturnEmptyListWhenNoRecommendations() {
-        jdbcTemplate.update("INSERT INTO films (film_id, name, description, release_date, duration)" +
-                "VALUES (?, ?, ?, ?, ?)", 1, "Film 1", "Description 1", LocalDate.now(), 120);
+        jdbcTemplate.update("INSERT INTO films (film_id, name, description, release_date, duration, mpa_rating_id) " +
+                "VALUES (?, ?, ?, ?, ?, ?)", 1, "Film 1", "Description 1", LocalDate.now(), 120, 1);
 
         jdbcTemplate.update("INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)", 1, 1);
 

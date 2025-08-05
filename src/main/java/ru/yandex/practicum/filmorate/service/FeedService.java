@@ -30,7 +30,7 @@ public class FeedService {
     }
 
 
-    private void addEvent(FeedEventDto eventDto) {
+    private void addEvent(FeedEventDto eventDto) {;
         log.error("Adding new event {}", eventDto);
         feedRepository.addEvent(mapper.toFeedEvent(eventDto));
     }

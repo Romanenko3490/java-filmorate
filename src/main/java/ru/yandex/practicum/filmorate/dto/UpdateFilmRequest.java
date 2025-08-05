@@ -18,7 +18,7 @@ public class UpdateFilmRequest {
     private LocalDate releaseDate;
     private Integer duration;
     private Set<Genre> genres;
-    private Set<MpaRating> mpa;
+    private MpaRating mpa;
     private Set<Director> directors;
 
     public boolean hasName() {
@@ -42,7 +42,7 @@ public class UpdateFilmRequest {
     }
 
     public boolean hasMpaRating() {
-        return mpa != null;
+        return mpa != null && mpa.getId() > 0 && mpa.getId() <= 5;
     }
 
 }

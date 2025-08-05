@@ -30,7 +30,7 @@ public class DirectorService {
                 .collect(Collectors.toList());
     }
 
-    public DirectorDto add(Director director) {
+    public DirectorDto add(Director  director) {
         if (director.getName() == null || director.getName().isBlank()) {
             throw new ValidationException("Director name is required");
         }

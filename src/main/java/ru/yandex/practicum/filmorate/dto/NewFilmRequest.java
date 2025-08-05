@@ -26,7 +26,7 @@ public class NewFilmRequest {
 
     private Set<Genre> genres;
 
-    private Set<MpaRating> mpa;
+    private MpaRating mpa;
 
     private Set<Director> directors;
 

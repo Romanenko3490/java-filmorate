@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.model.film.Genre;
 import ru.yandex.practicum.filmorate.model.film.MpaRating;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,9 +19,9 @@ public class FilmDto {
     private String description;
     private LocalDate releaseDate;
     private Integer duration;
-    private Set<GenreDto> genres = new  HashSet<>();
-    private Set<MpaDto> mpa = new HashSet<>();
-    private Set<Director> directors = new HashSet<>();
+    private Set<GenreDto> genres;
+    private MpaDto mpa;
+    private Set<Director> directors = new  LinkedHashSet<>();
 
     public FilmDto() {
     }
@@ -33,7 +32,7 @@ public class FilmDto {
                    LocalDate releaseDate,
                    Integer duration,
                    Set<Genre> genres,
-                   Set<MpaRating> mpa,
+                   MpaRating mpa,
                    Set<Director> directors) {
         this();
         this.id = id;
@@ -62,20 +61,8 @@ public class FilmDto {
                 null;
     }
 
-    public void setMpa(Set<MpaRating> mpas) {
-        this.mpa.clear();
-        if (mpas != null) {
-            this.mpa.addAll(mpas.stream()
-                    .map(mpa -> new MpaDto(mpa.getId(), mpa.getName()))
-                    .sorted()
-                    .collect(Collectors.toList()));
-        }
-    }
-
-    public void setMpaFromDto(Set<MpaDto> mpas) {
-        this.mpa = mpas != null ?
-                new LinkedHashSet<>(mpas) :
-                null;
+    public void setMpa(MpaRating mpa) {
+        this.mpa = mpa != null ? new MpaDto(mpa.getId(), mpa.getName()) : null;
     }
 
     public void setDirectors(Set<Director> directors) {

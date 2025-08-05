@@ -151,15 +151,15 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     "WHERE fd.film_id = ? ORDER BY d.id";
 
     private static final String GET_FILMS_BY_DIRECTOR_QUERY =
-            "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id, " +
-                    "m.mpa_id, m.mpa_name, m.description AS mpa_description, " +
+            "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, " +
+                    "f.mpa_rating_id, m.mpa_id, m.mpa_name, m.description AS mpa_description, " +
                     "COUNT(fl.user_id) AS likes_count " +
                     "FROM films f " +
                     "LEFT JOIN mpa_rating m ON f.mpa_rating_id = m.mpa_id " +
                     "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
                     "JOIN film_directors fd ON f.film_id = fd.film_id " +
                     "WHERE fd.id = ? " +
-                    "GROUP BY f.film_id, m.mpa_id " +
+                    "GROUP BY f.film_id, m.mpa_id, m.mpa_name, m.description " +
                     "ORDER BY %s";
     //endregion
 
@@ -453,15 +453,12 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     public List<Film> getFilmsByDirector(long directorId, String sortBy) {
         checker.directorExists(directorId);
-        List<Film> films = jdbc.query(GET_FILMS_BY_DIRECTOR_QUERY.formatted(sortBy), (rs, rowNum) -> {
-            Film film = new Film();
-            film.setId(rs.getLong("film_id"));
-            film.setName(rs.getString("name"));
-            film.setDescription(rs.getString("description"));
-            film.setReleaseDate(rs.getDate("release_date").toLocalDate());
-            film.setDuration(rs.getInt("duration"));
-            return film;
-        }, directorId);
+        // Используем стандартный mapper вместо анонимного
+        List<Film> films = jdbc.query(
+                GET_FILMS_BY_DIRECTOR_QUERY.formatted(sortBy),
+                mapper, // Используем инжектированный FilmRowMapper
+                directorId
+        );
         loadGenresForFilms(films);
         loadDirectorsForFilms(films);
         return films;

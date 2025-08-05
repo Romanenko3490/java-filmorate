@@ -21,7 +21,6 @@ public class FeedService {
     private final ReviewService reviewService;
     private final EntityCheckService entityCheckService;
 
-
     public List<FeedEventDto> getFeedByUserId(Long userId) {
         entityCheckService.checkUserExists(userId);
         return feedRepository.getFeedByUserId(userId).stream()

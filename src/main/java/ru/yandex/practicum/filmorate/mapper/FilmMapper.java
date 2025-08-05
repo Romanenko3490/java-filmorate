@@ -62,6 +62,8 @@ public class FilmMapper {
         // Обработка MPA
         if (film.getMpa() != null) {
             filmDto.setMpa(new MpaRating(film.getMpa().getId(), film.getMpa().getName(), film.getMpa().getDescription()));
+        } else {
+            filmDto.setMpa(new  MpaRating());
         }
 
         // Обработка режиссеров

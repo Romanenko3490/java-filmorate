@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Data
-public class MpaRating implements Comparable<MpaRating>{
+public class MpaRating implements Comparable<MpaRating> {
     private Long id;
     private String name;
     private String description;

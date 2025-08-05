@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.dto.NewReviewRequest;
 import ru.yandex.practicum.filmorate.dto.ReviewDto;
 import ru.yandex.practicum.filmorate.dto.UpdateReviewRequest;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.ReviewMapper;
 import ru.yandex.practicum.filmorate.model.Review;
 
@@ -28,6 +29,13 @@ public class ReviewService {
         entityCheckService.checkFilmExists(request.getFilmId());
         entityCheckService.checkUserExists(request.getUserId());
 
+        if (request.getContent() == null || request.getContent().isBlank()) {
+            throw new ValidationException("Content cannot be empty");
+        }
+        if (request.getIsPositive() == null) {
+            throw new ValidationException("isPositive cannot be null");
+        }
+
         Review review = ReviewMapper.mapToReview(request);
         review = reviewRepository.save(review);
         log.info("Review created with id: {}", review.getReviewId());
@@ -36,6 +44,14 @@ public class ReviewService {
 
     public ReviewDto updateReview(UpdateReviewRequest request) {
         entityCheckService.checkReviewExists(request.getReviewId());
+
+        if (request.getContent() == null || request.getContent().isBlank()) {
+            throw new ValidationException("Content cannot be empty");
+        }
+        if (request.getIsPositive() == null) {
+            throw new ValidationException("isPositive cannot be null");
+        }
+
         Review review = getReviewById(request.getReviewId());
         ReviewMapper.updateReview(review, request);
         reviewRepository.update(review);
@@ -120,6 +136,6 @@ public class ReviewService {
         return reviewRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Review not found with id: " + id));
     }
-
     //end
+
 }

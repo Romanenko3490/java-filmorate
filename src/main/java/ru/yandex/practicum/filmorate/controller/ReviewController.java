@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.NewReviewRequest;
 import ru.yandex.practicum.filmorate.dto.ReviewDto;
 import ru.yandex.practicum.filmorate.dto.UpdateReviewRequest;
+import ru.yandex.practicum.filmorate.service.EntityCheckService;
 import ru.yandex.practicum.filmorate.service.FeedService;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 
@@ -18,6 +19,7 @@ import java.util.List;
 public class ReviewController {
     private final ReviewService reviewService;
     private final FeedService feedService;
+    private final EntityCheckService entityCheckService;
 
 
     @PostMapping
@@ -38,7 +40,8 @@ public class ReviewController {
     @DeleteMapping("/{reviewId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteReview(@PathVariable("reviewId") Long reviewId) {
-        feedService.removeReviewEvent(reviewId);
+        Long userId = reviewService.getReviewAuthorId(reviewId);
+        feedService.removeReviewEvent(userId, reviewId);
         reviewService.deleteReview(reviewId);
     }
 

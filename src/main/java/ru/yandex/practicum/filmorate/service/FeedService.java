@@ -38,57 +38,102 @@ public class FeedService {
     public void addFriendEvent(long userId, long friendId) {
         entityCheckService.checkUserExists(userId);
         entityCheckService.checkUserExists(friendId);
-        addEvent(new FeedEventDto(null, userId, FeedEvent.EventType.FRIEND, FeedEvent.Operation.ADD, friendId, Instant.now().toEpochMilli()));
+        addEvent(new FeedEventDto(null,
+                userId,
+                FeedEvent.EventType.FRIEND,
+                FeedEvent.Operation.ADD,
+                friendId,
+                Instant.now().toEpochMilli()));
     }
 
     public void removeFriendEvent(long userId, long friendId) {
         entityCheckService.checkUserExists(userId);
         entityCheckService.checkUserExists(friendId);
-        addEvent(new FeedEventDto(null, userId, FeedEvent.EventType.FRIEND, FeedEvent.Operation.REMOVE, friendId, Instant.now().toEpochMilli()));
+        addEvent(new FeedEventDto(null,
+                userId, FeedEvent.EventType.FRIEND,
+                FeedEvent.Operation.REMOVE,
+                friendId,
+                Instant.now().toEpochMilli()));
     }
 
     // Film likes events
     public void addFilmLikeEvent(long userId, long filmId) {
         entityCheckService.checkUserExists(userId);
         entityCheckService.checkFilmExists(filmId);
-        addEvent(new FeedEventDto(null, userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.ADD, filmId, Instant.now().toEpochMilli()));
+        addEvent(new FeedEventDto(null,
+                userId, FeedEvent.EventType.LIKE,
+                FeedEvent.Operation.ADD,
+                filmId,
+                Instant.now().toEpochMilli()));
     }
 
     public void removeFilmLikeEvent(long userId, long filmId) {
         entityCheckService.checkUserExists(userId);
         entityCheckService.checkFilmExists(filmId);
-        addEvent(new FeedEventDto(null, userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.REMOVE, filmId, Instant.now().toEpochMilli()));
+        addEvent(new FeedEventDto(null,
+                userId,
+                FeedEvent.EventType.LIKE,
+                FeedEvent.Operation.REMOVE,
+                filmId,
+                Instant.now().toEpochMilli()));
+
     }
 
     // Review events (not review likes!)
     public void addReviewEvent(long userId, long reviewId) {
         entityCheckService.checkUserExists(userId);
         entityCheckService.checkReviewExists(reviewId);
-        addEvent(new FeedEventDto(null, userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.ADD, reviewId, Instant.now().toEpochMilli()));
+        addEvent(new FeedEventDto(null,
+                userId,
+                FeedEvent.EventType.REVIEW,
+                FeedEvent.Operation.ADD,
+                reviewId,
+                Instant.now().toEpochMilli()));
     }
 
     public void updateReviewEvent(long reviewId) {
         entityCheckService.checkReviewExists(reviewId);
         Long userId = reviewService.getReviewAuthorId(reviewId);
-        addEvent(new FeedEventDto(null, userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.UPDATE, reviewId, Instant.now().toEpochMilli()));
+        addEvent(new FeedEventDto(null,
+                userId,
+                FeedEvent.EventType.REVIEW,
+                FeedEvent.Operation.UPDATE,
+                reviewId,
+                Instant.now().toEpochMilli()));
     }
 
-    public void removeReviewEvent(long reviewId) {
-        entityCheckService.checkReviewExists(reviewId);
-        Long userId = reviewService.getReviewAuthorId(reviewId);
-        addEvent(new FeedEventDto(null, userId, FeedEvent.EventType.REVIEW, FeedEvent.Operation.REMOVE, reviewId, Instant.now().toEpochMilli()));
+    public void removeReviewEvent(long userId, long reviewId) {
+        entityCheckService.checkUserExists(userId);
+        entityCheckService.checkReviewExists(reviewId);// (проверка уже была в getReviewAuthorId), оставил на всякий
+        addEvent(new FeedEventDto(null,
+                userId,
+                FeedEvent.EventType.REVIEW,
+                FeedEvent.Operation.REMOVE,
+                reviewId,
+                Instant.now().toEpochMilli()
+        ));
     }
 
     // Review likes events (treated as LIKE type)
     public void addReviewLikeEvent(long userId, long reviewId) {
         entityCheckService.checkUserExists(userId);
         entityCheckService.checkReviewExists(reviewId);
-        addEvent(new FeedEventDto(null, userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.ADD, reviewId, Instant.now().toEpochMilli()));
+        addEvent(new FeedEventDto(null,
+                userId,
+                FeedEvent.EventType.LIKE,
+                FeedEvent.Operation.ADD,
+                reviewId,
+                Instant.now().toEpochMilli()));
     }
 
     public void removeReviewLikeEvent(long userId, long reviewId) {
         entityCheckService.checkUserExists(userId);
-        addEvent(new FeedEventDto(null, userId, FeedEvent.EventType.LIKE, FeedEvent.Operation.REMOVE, reviewId, Instant.now().toEpochMilli()));
+        addEvent(new FeedEventDto(null,
+                userId,
+                FeedEvent.EventType.LIKE,
+                FeedEvent.Operation.REMOVE,
+                reviewId,
+                Instant.now().toEpochMilli()));
     }
 
 

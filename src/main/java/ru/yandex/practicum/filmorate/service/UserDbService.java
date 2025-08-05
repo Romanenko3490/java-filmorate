@@ -91,6 +91,7 @@ public class UserDbService {
         entityCheckService.checkUserExists(userId);
         entityCheckService.checkUserExists(friendId);
         friendshipRepository.confirmFriend(userId, friendId);
+
         log.info("User {} confirmed friendship with {}", userId, friendId);
     }
 

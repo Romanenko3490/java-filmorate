@@ -59,7 +59,7 @@ public class ReviewController {
     @PutMapping("/{reviewId}/like/{userId}")
     public void addLike(@PathVariable Long reviewId, @PathVariable Long userId) {
         reviewService.addLike(reviewId, userId);
-        feedService.addReviewLikeEvent(userId, reviewId);
+        //feedService.addReviewLikeEvent(userId, reviewId);
     }
 
     @PutMapping("/{reviewId}/dislike/{userId}")
@@ -70,7 +70,7 @@ public class ReviewController {
     @DeleteMapping("/{reviewId}/like/{userId}")
     public void deleteLike(@PathVariable Long reviewId, @PathVariable Long userId) {
         reviewService.removeLike(reviewId, userId);
-        feedService.removeReviewLikeEvent(userId, reviewId);
+        //feedService.removeReviewLikeEvent(userId, reviewId);
     }
 
     @DeleteMapping("/{reviewId}/dislike/{userId}")

@@ -11,13 +11,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.dal.*;
 import ru.yandex.practicum.filmorate.dal.mappers.*;
-import ru.yandex.practicum.filmorate.dto.*;
+import ru.yandex.practicum.filmorate.dto.FeedEventDto;
+import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.NewReviewRequest;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.FeedEventMapper;
 import ru.yandex.practicum.filmorate.model.FeedEvent;
 import ru.yandex.practicum.filmorate.model.film.MpaRating;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;

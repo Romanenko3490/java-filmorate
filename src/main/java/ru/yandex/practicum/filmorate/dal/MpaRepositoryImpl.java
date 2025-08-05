@@ -29,7 +29,7 @@ public class MpaRepositoryImpl extends BaseRepository<MpaRating> implements MpaR
             mpa.setName(rs.getString("mpa_name"));
             mpa.setDescription(rs.getString("description"));
             return mpa;
-        },  checker);
+        }, checker);
     }
 
     @Override

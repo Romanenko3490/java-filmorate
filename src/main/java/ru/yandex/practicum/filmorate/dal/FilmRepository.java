@@ -309,11 +309,21 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     public void addLike(long filmId, long userId) {
         checkFilm(filmId);
         checker.userExist(userId);
+        Integer count = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM film_likes WHERE film_id = ? AND user_id = ?",
+                Integer.class,
+                filmId,
+                userId
+        );
 
-        jdbc.update(INSERT_FILM_LIKE_QUERY, filmId, userId);
-        log.info("Like added - filmId: {}, userId: {}", filmId, userId);
-
+        if (count == null || count == 0) {
+            jdbc.update(INSERT_FILM_LIKE_QUERY, filmId, userId);
+            log.info("Like added - filmId: {}, userId: {}", filmId, userId);
+        } else {
+            log.info("Like already exists - filmId: {}, userId: {}", filmId, userId);
+        }
     }
+
 
     @Transactional
     public void removeLike(long filmId, long userId) {
@@ -365,6 +375,8 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
                     .collect(Collectors.toList());
 
             jdbc.batchUpdate(INSERT_FILM_DIRECTOR_QUERY, batchArgs);
+        } else {
+            film.setDirectors(null);
         }
     }
 
@@ -453,10 +465,9 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
     public List<Film> getFilmsByDirector(long directorId, String sortBy) {
         checker.directorExists(directorId);
-        // Используем стандартный mapper вместо анонимного
         List<Film> films = jdbc.query(
                 GET_FILMS_BY_DIRECTOR_QUERY.formatted(sortBy),
-                mapper, // Используем инжектированный FilmRowMapper
+                mapper,
                 directorId
         );
         loadGenresForFilms(films);

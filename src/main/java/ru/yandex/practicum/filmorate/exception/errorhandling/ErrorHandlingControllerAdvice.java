@@ -66,9 +66,9 @@ public class ErrorHandlingControllerAdvice {
     }
 
     @ResponseBody
-    @ExceptionHandler(Throwable.class)
+    @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ViolationErrorResponse handleInternalServerException(final Throwable ex) {
+    public ViolationErrorResponse handleInternalServerException(final Exception ex) {
         log.error("Internal Server Error", ex);
         return new ViolationErrorResponse(List.of(new Violation(null, ex.getMessage())));
     }

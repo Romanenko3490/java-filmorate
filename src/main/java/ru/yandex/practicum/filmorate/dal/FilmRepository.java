@@ -229,7 +229,6 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
     }
 
     @Override
-    @Transactional
     public Film updateFilm(Film film) {
         checkFilm(film.getId());
         jdbc.update(UPDATE_FILM_QUERY,
@@ -269,7 +268,7 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
 
         if (year != null) {
             if (year < 1985 || year > LocalDate.now().getYear()) {
-                throw new IllegalArgumentException("Year must be between 1985 and 1985.");
+                throw new IllegalArgumentException("Year must be between 1985 and current year.");
             }
         }
 
@@ -279,32 +278,24 @@ public class FilmRepository extends BaseRepository<Film> implements FilmStorage 
             }
         }
 
-
+        List<Film> films;
         if (genreId != null && year != null) {
             log.debug("Executing popular films query with genreId: {}, year: {}, limit: {}", genreId, year, limit);
-            List<Film> films = jdbc.query(GET_POPULAR_FILMS_BY_GENRE_AND_YEAR_QUERY, mapper, genreId, year, limit);
-            loadGenresForFilms(films);
-            loadDirectorsForFilms(films);
-            return films;
-        } else if (genreId != null && year == null) {
+            films = jdbc.query(GET_POPULAR_FILMS_BY_GENRE_AND_YEAR_QUERY, mapper, genreId, year, limit);
+        } else if (genreId != null) {
             log.debug("Executing popular films query with genreId: {}, limit: {}", genreId, limit);
-            List<Film> films = jdbc.query(GET_POPULAR_FILMS_BY_GENRE_QUERY, mapper, genreId, limit);
-            loadGenresForFilms(films);
-            loadDirectorsForFilms(films);
-            return films;
-        } else if (year != null && genreId == null) {
+            films = jdbc.query(GET_POPULAR_FILMS_BY_GENRE_QUERY, mapper, genreId, limit);
+        } else if (year != null) {
             log.debug("Executing popular films query with year: {}, limit: {}", year, limit);
-            List<Film> films = jdbc.query(GET_POPULAR_FILMS_BY_YEAR_QUERY, mapper, year, limit);
-            loadGenresForFilms(films);
-            loadDirectorsForFilms(films);
-            return films;
+            films = jdbc.query(GET_POPULAR_FILMS_BY_YEAR_QUERY, mapper, year, limit);
         } else {
             log.debug("Executing popular films query with limit: {}", limit);
-            List<Film> films = jdbc.query(GET_POPULAR_FILMS_QUERY, mapper, limit);
-            loadGenresForFilms(films);
-            loadDirectorsForFilms(films);
-            return films;
+            films = jdbc.query(GET_POPULAR_FILMS_QUERY, mapper, limit);
         }
+
+        loadGenresForFilms(films);
+        loadDirectorsForFilms(films);
+        return films;
     }
     // endregion
 

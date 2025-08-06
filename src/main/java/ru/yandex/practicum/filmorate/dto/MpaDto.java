@@ -7,9 +7,6 @@ public class MpaDto {
     private Long id;
     private String name;
 
-    public MpaDto() {
-    }
-
     public MpaDto(Long id) {
         this.id = id;
     }

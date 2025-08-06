@@ -113,28 +113,4 @@ public class FeedService {
                 Instant.now().toEpochMilli()
         ));
     }
-
-    // Review likes events (treated as LIKE type)
-//    public void addReviewLikeEvent(long userId, long reviewId) {
-//        entityCheckService.checkUserExists(userId);
-//        entityCheckService.checkReviewExists(reviewId);
-//        addEvent(new FeedEventDto(null,
-//                userId,
-//                FeedEvent.EventType.LIKE,
-//                FeedEvent.Operation.ADD,
-//                reviewId,
-//                Instant.now().toEpochMilli()));
-//    }
-
-//    public void removeReviewLikeEvent(long userId, long reviewId) {
-//        entityCheckService.checkUserExists(userId);
-//        addEvent(new FeedEventDto(null,
-//                userId,
-//                FeedEvent.EventType.LIKE,
-//                FeedEvent.Operation.REMOVE,
-//                reviewId,
-//                Instant.now().toEpochMilli()));
-//    }
-
-
 }

@@ -2,15 +2,15 @@ package ru.yandex.practicum.filmorate.dal;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
 import ru.yandex.practicum.filmorate.model.user.User;
 
 import java.util.List;
 
 @Repository
 @Slf4j
-public class FriendshipRepository {
+public class FriendshipRepository extends BaseRepository<User> {
     private static final String ADD_FRIEND_QUERY =
             "INSERT INTO friendship (user_id, friend_id, status) VALUES (?, ?, 'CONFIRMED')";
     private static final String CONFIRM_FRIEND_QUERY =
@@ -35,43 +35,49 @@ public class FriendshipRepository {
                     "ON CONFLICT (user_id, friend_id) DO UPDATE SET status = 'CONFIRMED'";
 
 
-    private final JdbcTemplate jdbc;
-    private final UserRowMapper userRowMapper;
-
-    public FriendshipRepository(JdbcTemplate jdbc, UserRowMapper userRowMapper) {
-        this.jdbc = jdbc;
-        this.userRowMapper = userRowMapper;
+    public FriendshipRepository(JdbcTemplate jdbc, RowMapper<User> mapper, Checker checker) {
+        super(jdbc, mapper, checker);
     }
 
     // Остальные методы остаются без изменений
     public void addFriend(long userId, long friendId) {
+        checker.userExist(userId);
+        checker.userExist(friendId);
         jdbc.update(ADD_FRIEND_QUERY, userId, friendId);
         log.debug("Added CONFIRMED friendship from {} to {}", userId, friendId);
     }
 
-    // Упрощаем confirmFriend (по сути дублирует addFriend)
     public void confirmFriend(long userId, long friendId) {
+        checker.userExist(userId);
+        checker.userExist(friendId);
         jdbc.update(CONFIRM_FRIEND_QUERY, userId, friendId);
     }
 
     public void removeFriend(long userId, long friendId) {
+        checker.userExist(userId);
+        checker.userExist(friendId);
         jdbc.update(REMOVE_FRIEND_QUERY, userId, friendId);
     }
 
     public List<User> getFriends(long userId) {
+        checker.userExist(userId);
         log.debug("Getting friends for user {}", userId);
-        return jdbc.query(GET_FRIENDS_QUERY, userRowMapper, userId);
+        return jdbc.query(GET_FRIENDS_QUERY, mapper, userId);
     }
 
     public List<User> getPendingRequests(long userId) {
-        return jdbc.query(GET_PENDING_REQUESTS_QUERY, userRowMapper, userId);
+        checker.userExist(userId);
+        return jdbc.query(GET_PENDING_REQUESTS_QUERY, mapper, userId);
     }
 
     public List<User> getCommonFriends(long userId, long otherId) {
-        return jdbc.query(GET_COMMON_FRIENDS_QUERY, userRowMapper, userId, otherId);
+        checker.userExist(userId);
+        return jdbc.query(GET_COMMON_FRIENDS_QUERY, mapper, userId, otherId);
     }
 
     public boolean friendshipExists(long userId, long friendId) {
+        checker.userExist(userId);
+        checker.userExist(friendId);
         Integer count = jdbc.queryForObject(
                 CHECK_FRIENDSHIP_QUERY,
                 Integer.class,

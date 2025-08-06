@@ -6,6 +6,7 @@ import jakarta.validation.constraints.PastOrPresent;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.yandex.practicum.filmorate.enums.FriendshipStatus;
 
 import java.time.LocalDate;
 
@@ -27,7 +28,3 @@ public class Friendship {
     private LocalDate createdDate = LocalDate.now();
 }
 
-enum FriendshipStatus {
-    PENDING,
-    CONFIRMED
-}

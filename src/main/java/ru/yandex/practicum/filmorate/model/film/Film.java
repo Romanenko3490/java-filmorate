@@ -28,6 +28,8 @@ public class Film {
     private MpaRating mpa;
 
     private Set<Long> likes = new HashSet<>();
+    private Set<Director> directors = new HashSet<>();
+
 
     public Film(Long id, String name, String description, LocalDate releaseDate, Integer duration) {
         this.id = id;

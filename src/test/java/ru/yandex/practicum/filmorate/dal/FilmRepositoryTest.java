@@ -12,16 +12,23 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.model.film.Genre;
 import ru.yandex.practicum.filmorate.model.film.MpaRating;
+import ru.yandex.practicum.filmorate.service.EntityCheckService;
 
 import java.time.LocalDate;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @JdbcTest
 @AutoConfigureTestDatabase
-@Import({FilmRepository.class, GenreRepositoryImpl.class, MpaRepositoryImpl.class, FilmRowMapper.class})
+@Import({
+        FilmRepository.class,
+        GenreRepositoryImpl.class,
+        MpaRepositoryImpl.class,
+        EntityChecker.class,
+        EntityCheckService.class,
+        FilmRowMapper.class})
 @Sql(scripts = {"/schema.sql", "/test-data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class FilmRepositoryTest {
 
@@ -40,12 +47,12 @@ class FilmRepositoryTest {
         testFilm.setLikes(new HashSet<>());
 
         MpaRating mpa = new MpaRating();
-        mpa.setId(1);
+        mpa.setId(1L);
         testFilm.setMpa(mpa);
 
         Set<Genre> genres = new HashSet<>();
         Genre genre = new Genre();
-        genre.setId(1);
+        genre.setId(1L);
         genres.add(genre);
         testFilm.setGenres(genres);
     }
@@ -100,7 +107,7 @@ class FilmRepositoryTest {
         anotherFilm.setDuration(90);
         anotherFilm.setLikes(new HashSet<>());
         MpaRating mpa = new MpaRating();
-        mpa.setId(2);
+        mpa.setId(2L);
         anotherFilm.setMpa(mpa);
         filmRepository.addFilm(anotherFilm);
 
@@ -115,16 +122,23 @@ class FilmRepositoryTest {
 
         filmRepository.addLike(addedFilm.getId(), 1L);
 
-        Optional<Film> filmWithLike = filmRepository.getFilmById(addedFilm.getId());
-        assertThat(filmWithLike).isPresent();
+        List<Film> popularFilms = filmRepository.getPopularFilms(10, null, null);
 
-        List<Film> popularFilms = filmRepository.getPopularFilms(10);
         assertThat(popularFilms).extracting(Film::getId).contains(addedFilm.getId());
+        assertThat(popularFilms.get(0).getId()).isEqualTo(addedFilm.getId()); // Проверяем, что он на первом месте
 
         filmRepository.removeLike(addedFilm.getId(), 1L);
 
-        List<Film> filmsAfterRemove = filmRepository.getPopularFilms(10);
-        assertThat(filmsAfterRemove).extracting(Film::getId).doesNotContain(addedFilm.getId());
+        List<Film> filmsAfterRemove = filmRepository.getPopularFilms(10, null, null);
+
+        if (filmsAfterRemove.size() > 1) {
+            assertThat(filmsAfterRemove.stream().limit(1))
+                    .extracting(Film::getId)
+                    .doesNotContain(addedFilm.getId());
+        } else {
+            // Если других фильмов нет, проверяем, что у него 0 лайков
+            assertThat(filmsAfterRemove.get(0).getLikes()).isEmpty();
+        }
     }
 
     @Test
@@ -137,7 +151,7 @@ class FilmRepositoryTest {
         film2.setDuration(90);
         film2.setLikes(new HashSet<>());
         MpaRating mpa = new MpaRating();
-        mpa.setId(2);
+        mpa.setId(2L);
         film2.setMpa(mpa);
         film2 = filmRepository.addFilm(film2);
 
@@ -145,7 +159,7 @@ class FilmRepositoryTest {
         filmRepository.addLike(film2.getId(), 1L);
         filmRepository.addLike(film2.getId(), 2L);
 
-        List<Film> popularFilms = filmRepository.getPopularFilms(2);
+        List<Film> popularFilms = filmRepository.getPopularFilms(2, null, null);
 
         assertThat(popularFilms).hasSize(2);
         assertThat(popularFilms.get(0).getId()).isEqualTo(film2.getId());
@@ -156,7 +170,16 @@ class FilmRepositoryTest {
         assertThrows(NotFoundException.class, () -> {
             Film film = new Film();
             film.setId(999L);
-            film.setLikes(new HashSet<>());
+            film.setName("Test Film");
+            film.setDescription("Test Description");
+            film.setReleaseDate(LocalDate.now());
+            film.setDuration(120);
+
+            MpaRating mpa = new MpaRating();
+            mpa.setId(1L);
+            film.setMpa(mpa);
+
+
             filmRepository.updateFilm(film);
         });
     }

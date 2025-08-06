@@ -10,13 +10,12 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.filmorate.dal.FilmRepository;
-import ru.yandex.practicum.filmorate.dal.GenreRepositoryImpl;
-import ru.yandex.practicum.filmorate.dal.MpaRepositoryImpl;
-import ru.yandex.practicum.filmorate.dal.UserRepository;
+import ru.yandex.practicum.filmorate.dal.*;
+import ru.yandex.practicum.filmorate.dal.mappers.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.MpaDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -26,7 +25,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @JdbcTest
 @AutoConfigureTestDatabase
@@ -36,10 +35,16 @@ import static org.junit.jupiter.api.Assertions.*;
         UserRepository.class,
         GenreRepositoryImpl.class,
         MpaRepositoryImpl.class,
+        DirectorRepositoryImpl.class,
         FilmRowMapper.class,
-        UserRowMapper.class})
+        UserRowMapper.class,
+        UserDbService.class,
+        EntityChecker.class,
+        EntityCheckService.class,
+        FriendshipRepository.class,
+        DirectorRowMapper.class})
 @Sql(scripts = {"/schema.sql", "/test-data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-class FilmDbServiceTest {
+class FilmsTest {
 
     @Autowired
     private FilmDbService filmDbService;
@@ -57,9 +62,10 @@ class FilmDbServiceTest {
         newFilmRequest.setDescription("Test Description");
         newFilmRequest.setReleaseDate(LocalDate.of(2000, 1, 1));
         newFilmRequest.setDuration(120);
+        newFilmRequest.setMpa(new MpaRating(1L, null, null));
 
         MpaRating mpa = new MpaRating();
-        mpa.setId(1);
+        mpa.setId(1L);
         newFilmRequest.setMpa(mpa);
 
         updateFilmRequest = new UpdateFilmRequest();
@@ -82,6 +88,7 @@ class FilmDbServiceTest {
         assertThat(retrievedFilm.getDescription()).isEqualTo("Test Description");
         assertThat(retrievedFilm.getDuration()).isEqualTo(120);
         assertThat(retrievedFilm.getMpa().getId()).isEqualTo(1);
+        assertThat(retrievedFilm.getMpa()).isEqualTo(new MpaDto(1L, "G"));
     }
 
     @Test
@@ -106,7 +113,7 @@ class FilmDbServiceTest {
         anotherFilm.setReleaseDate(LocalDate.of(2001, 1, 1));
         anotherFilm.setDuration(90);
         MpaRating mpa = new MpaRating();
-        mpa.setId(2);
+        mpa.setId(2L);
         anotherFilm.setMpa(mpa);
         filmDbService.addFilm(anotherFilm);
 
@@ -121,7 +128,7 @@ class FilmDbServiceTest {
         FilmDto film = filmDbService.addFilm(newFilmRequest);
 
         filmDbService.addLike(film.getId(), 1L);
-        assertThat(countLikes(film.getId(), 1L)).isEqualTo(1);
+        assertThat(countFilmLikes(film.getId(), 1L)).isEqualTo(1);
 
         int deleted = jdbcTemplate.update(
                 "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?",
@@ -129,12 +136,12 @@ class FilmDbServiceTest {
         );
         log.info("Deleted {} rows", deleted);
 
-        assertThat(countLikes(film.getId(), 1L))
+        assertThat(countFilmLikes(film.getId(), 1L))
                 .as("Лайк должен быть удалён из БД")
                 .isEqualTo(0);
     }
 
-    private int countLikes(long filmId, long userId) {
+    private int countFilmLikes(long filmId, long userId) {
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM film_likes WHERE film_id = ? AND user_id = ?",
                 Integer.class,
@@ -154,7 +161,7 @@ class FilmDbServiceTest {
         anotherFilm.setReleaseDate(LocalDate.of(2001, 1, 1));
         anotherFilm.setDuration(90);
         MpaRating mpa = new MpaRating();
-        mpa.setId(2);
+        mpa.setId(2L);
         anotherFilm.setMpa(mpa);
         FilmDto film2 = filmDbService.addFilm(anotherFilm);
 
@@ -162,7 +169,7 @@ class FilmDbServiceTest {
         filmDbService.addLike(film2.getId(), 1L);
         filmDbService.addLike(film2.getId(), 2L);
 
-        List<FilmDto> popularFilms = filmDbService.getMostPopularFilms(2);
+        List<FilmDto> popularFilms = filmDbService.getMostPopularFilms(2, null, null);
 
         assertThat(popularFilms).hasSize(2);
         assertThat(popularFilms.get(0).getId()).isEqualTo(film2.getId());
@@ -175,7 +182,93 @@ class FilmDbServiceTest {
 
     @Test
     void shouldThrowWhenMpaNotFound() {
-        newFilmRequest.getMpa().setId(999);
+        newFilmRequest.getMpa().setId(999L);
         assertThrows(NotFoundException.class, () -> filmDbService.addFilm(newFilmRequest));
     }
+
+    @Test
+    void shouldDeleteFilmAndCascadeRelations() {
+        FilmDto film = filmDbService.addFilm(newFilmRequest);
+
+        filmDbService.addLike(film.getId(), 1L);
+        jdbcTemplate.update("INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)",
+                film.getId(), 1);
+
+        filmDbService.removeFilm(film.getId());
+        assertThrows(NotFoundException.class, () -> filmDbService.getFilmById(film.getId()));
+
+        assertThat(countFilmLikes(film.getId()))
+                .as("likes relations should be deleted")
+                .isZero();
+
+        assertThat(countFilmGenres(film.getId()))
+                .as("genres relations should be deleted")
+                .isZero();
+    }
+
+    private int countFilmLikes(long filmId) {
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM film_likes WHERE film_id = ?",
+                Integer.class,
+                filmId);
+
+        return count != null ? count : 0;
+    }
+
+    private int countFilmGenres(long filmId) {
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM film_genre WHERE film_id = ?",
+                Integer.class,
+                filmId);
+
+        return count != null ? count : 0;
+    }
+
+    @Test
+    void shouldGetCommonFilms() {
+        Long user1Id = 1L;
+        Long user2Id = 2L;
+
+        FilmDto film1 = filmDbService.addFilm(newFilmRequest);
+
+        NewFilmRequest anotherFilm = new NewFilmRequest();
+        anotherFilm.setName("Common Film");
+        anotherFilm.setDescription("Film liked by both users");
+        anotherFilm.setReleaseDate(LocalDate.of(2001, 1, 1));
+        anotherFilm.setDuration(90);
+        MpaRating mpa = new MpaRating();
+        mpa.setId(2L);
+        anotherFilm.setMpa(mpa);
+        FilmDto film2 = filmDbService.addFilm(anotherFilm);
+
+        filmDbService.addLike(film1.getId(), user1Id);
+        filmDbService.addLike(film2.getId(), user1Id); // Общий фильм
+        filmDbService.addLike(film2.getId(), user2Id); // Общий фильм
+
+
+        List<FilmDto> commonFilms = filmDbService.getCommonFilms(user1Id, user2Id);
+
+        assertThat(commonFilms)
+                .hasSize(1)
+                .extracting(FilmDto::getId)
+                .containsExactly(film2.getId());
+
+        NewFilmRequest thirdFilm = new NewFilmRequest();
+        thirdFilm.setName("Most Popular Common Film");
+        thirdFilm.setDescription("Most popular film liked by both");
+        thirdFilm.setReleaseDate(LocalDate.of(2002, 1, 1));
+        thirdFilm.setDuration(100);
+        thirdFilm.setMpa(mpa);
+        FilmDto film3 = filmDbService.addFilm(thirdFilm);
+
+        filmDbService.addLike(film3.getId(), user1Id);
+        filmDbService.addLike(film3.getId(), user2Id);
+        filmDbService.addLike(film3.getId(), 3L); // Дополнительный лайк
+
+        List<FilmDto> updatedCommonFilms = filmDbService.getCommonFilms(user1Id, user2Id);
+
+        assertThat(updatedCommonFilms)
+                .hasSize(2)
+                .extracting(FilmDto::getId)
+                .containsExactly(film3.getId(), film2.getId()); // Сначала более популярный
+    }
+
 }

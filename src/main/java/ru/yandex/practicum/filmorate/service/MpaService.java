@@ -23,7 +23,7 @@ public class MpaService {
                 .collect(Collectors.toList());
     }
 
-    public MpaDto getMpaById(int id) {
+    public MpaDto getMpaById(long id) {
         return mpaRepository.findById(id)
                 .map(MpaMapper::mapToMpaDto)
                 .orElseThrow(() -> new NotFoundException("MPA rating not found with id: " + id));

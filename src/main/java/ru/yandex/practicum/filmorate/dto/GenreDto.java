@@ -1,9 +1,21 @@
 package ru.yandex.practicum.filmorate.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 
 @Data
-public class GenreDto {
-    private Integer id;
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class GenreDto implements Comparable<GenreDto> {
+    private Long id;
     private String name;
+
+    @Override
+    public int compareTo(GenreDto o) {
+        return this.id.compareTo(o.getId());
+    }
 }

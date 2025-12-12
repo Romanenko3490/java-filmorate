@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.exception.errorhandling;
 
 import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,6 +10,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -56,18 +56,19 @@ public class ErrorHandlingControllerAdvice {
         return new ViolationErrorResponse(List.of(new Violation("Validation Failed", ex.getMessage())));
     }
 
+    // согласно тестов из Postman коллекции ответ должен содержать атрибут error
     @ResponseBody
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ViolationErrorResponse handleNotFoundException(final NotFoundException ex) {
+    public ErrorResponse handleNotFoundException(final NotFoundException ex) {
         log.error("Not Found Exception", ex.getMessage());
-        return new ViolationErrorResponse(List.of(new Violation("Not Found", ex.getMessage())));
+        return new ErrorResponse("Not Found", ex.getMessage());
     }
 
     @ResponseBody
-    @ExceptionHandler(Throwable.class)
+    @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ViolationErrorResponse handleInternalServerException(final Throwable ex) {
+    public ViolationErrorResponse handleInternalServerException(final Exception ex) {
         log.error("Internal Server Error", ex);
         return new ViolationErrorResponse(List.of(new Violation(null, ex.getMessage())));
     }

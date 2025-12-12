@@ -15,8 +15,7 @@ public class User {
     @NotBlank(message = "Email can not be blank or empty")
     private String email;
 
-    @NotNull(message = "Login can not be empty")
-    @NotBlank(message = "login can not be blank")
+    @NotBlank(message = "login can not be blank or null")
     @Pattern(regexp = "\\S+", message = "Login can not contain spaces")
     private String login;
 
